@@ -1,0 +1,19 @@
+{
+  "n_series": 30490,
+  "n_items": 3049,
+  "n_stores": 10,
+  "n_states": 3,
+  "n_categories": 3,
+  "n_departments": 7,
+  "n_days": 1941,
+  "total_units": 66927173,
+  "zero_share": 0.6799776584040612,
+  "negative_sales_count": 0,
+  "missing_sales_count": 0,
+  "price_rows": 6841121,
+  "missing_price_count": 0,
+  "price_min": 0.01,
+  "price_max": 107.32,
+  "start_date": "2011-01-29",
+  "end_date": "2016-05-22"
+}
