@@ -1,0 +1,26 @@
+-- Create these three disconnected tables with Modeling > New table.
+
+ScenarioLeadTime =
+GENERATESERIES(7, 28, 1)
+
+ScenarioReviewPeriod =
+DATATABLE(
+    "Days", INTEGER,
+    {
+        {0}, {7}, {14}, {21}, {28}
+    }
+)
+
+ScenarioServiceLevel =
+DATATABLE(
+    "Scenario", STRING,
+    "Z", DOUBLE,
+    {
+        {"ABC default", BLANK()},
+        {"85%", 1.036},
+        {"90%", 1.282},
+        {"95%", 1.645},
+        {"97%", 1.881},
+        {"99%", 2.326}
+    }
+)
