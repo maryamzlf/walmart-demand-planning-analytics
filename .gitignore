@@ -1,0 +1,13 @@
+# Raw Kaggle data is intentionally not committed.
+data/raw/
+data/processed/
+*.zip
+*.parquet
+*.pkl
+*.joblib
+__pycache__/
+*.pyc
+.venv/
+.env
+.DS_Store
+.ipynb_checkpoints/
