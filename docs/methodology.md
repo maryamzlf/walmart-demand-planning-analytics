@@ -20,7 +20,7 @@ The bottom-level forecasting grain is **item × store × day**.
 - 3 categories and 7 departments
 - 1,941 observed selling days from 2011-01-29 through 2016-05-22
 
-The evaluation sales file is used as the canonical source because it already contains the validation history.
+The evaluation sales file is used as the canonical source because it already contains the full validation history. A full chunkwise equality check confirms that all 30,490 validation series and all `d_1 ... d_1913` values are identical to the corresponding prefix of the evaluation file.
 
 ## 3. Demand segmentation
 A one-model-fits-all approach performs poorly on sparse retail demand, so each item-store series is classified using the last 365 observed days.
@@ -40,7 +40,7 @@ This dataset is strongly intermittent: roughly 68% of daily item-store observati
 
 ## 4. Value and variability segmentation
 ### ABC
-Item-store combinations are ranked by trailing-365-day estimated revenue. Cumulative revenue defines A as the first 80%, B as the next 15%, and C as the final 5%.
+Item-store combinations are ranked by trailing-365-day estimated revenue. Cumulative revenue defines A as approximately the first 80%, B as the next 15%, and C as the final 5%.
 
 ### XYZ
 Weekly demand variability is measured with coefficient of variation: X <= 0.50; Y > 0.50 and <= 1.00; Z > 1.00.
@@ -63,14 +63,16 @@ Features: 1/7/14/28/56-day lags; 7/28/56-day rolling means; 28-day volatility; c
 
 The model uses a Tweedie objective for non-negative, zero-heavy demand.
 
+Price handling is explicitly leakage-safe. Weekly prices are forward-filled only; an initial missing price is encoded as `0` (unavailable) rather than backfilled from a later week. For the 28-day future M5 horizon, the competition-provided future weekly prices are treated as known planning covariates.
+
 | Model | WAPE | RMSE | Bias |
 |---|---:|---:|---:|
-| LightGBM | 45.31% | 4.33 | -0.89% |
+| LightGBM | 45.14% | 4.30 | -0.86% |
 | 28-day moving average | 49.46% | 4.86 | -1.25% |
 | 8-week weekday average | 49.53% | 4.78 | -1.07% |
 | 7-day seasonal naive | 56.75% | 5.44 | -6.12% |
 
-LightGBM reduced WAPE by **8.4% relative to the 28-day moving-average challenger**.
+LightGBM reduced WAPE by **8.7% relative to the 28-day moving-average challenger**.
 
 ## 7. Forecast routing
 - Top 3,000 priority item-store series: LightGBM
@@ -82,7 +84,7 @@ This concentrates model complexity where it creates the most business value.
 ## 8. Scenario-based inventory planning
 Because M5 contains no on-hand inventory or supplier lead time, the project does not calculate actual order quantities.
 
-Assumptions: 14-day lead time, 7-day review period, 95% service for A, 90% for B, and 85% for C.
+Assumptions: 14-day lead time, 7-day review period, 95% service for A, 90% for B, and 85% for C. Daily demand volatility uses the trailing 90 observed days.
 
 `Safety Stock = z × sigma_daily × sqrt(lead_time)`
 
@@ -93,4 +95,14 @@ Assumptions: 14-day lead time, 7-day review period, 95% service for A, 90% for B
 These are decision-support scenarios only.
 
 ## 9. Planner Action Center
-Each item-store record receives a demand-risk score from value class, variability, demand pattern, and forecast change. Rule-based actions direct attention toward high-value growth, potential excess exposure, volatile/lumpy demand, and long-tail inventory risk. This turns forecast output into a planning workflow rather than stopping at prediction accuracy.
+Each item-store record receives a demand-risk score from value class, variability, demand pattern, and a planning-change signal. Ordinary forecast growth is retained when informative. When a forecast is mechanically flat (notably the MA28 route), the signal uses recent 28-day run-rate movement instead. A symmetric-change fallback keeps zero-baseline activations and drop-to-zero cases finite rather than silently turning them into missing values.
+
+Rule-based actions direct attention toward high-value growth, potential excess exposure, volatile/lumpy demand, and long-tail inventory risk. This turns forecast output into a planning workflow rather than stopping at prediction accuracy.
+
+## 10. Reproducibility
+The scripts regenerate the portfolio evidence files:
+- `backtest.py` writes both fold-level results and `outputs/baseline_model_summary.csv`.
+- `priority_model.py` writes holdout metrics and feature importance.
+- `final_forecast.py` writes the Power BI-ready large tables plus `outputs/segment_summary.csv` and `outputs/planner_action_sample.csv`.
+
+Raw and large processed data remain excluded from Git and are regenerated from the public M5 source files.

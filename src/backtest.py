@@ -36,7 +36,8 @@ def croston_batch(history, alpha=0.1, lookback=730):
     return output
 
 
-def run_backtest(raw_dir="data/raw", output_path="outputs/baseline_backtest.csv", horizon=28):
+def run_backtest(raw_dir="data/raw", output_path="outputs/baseline_backtest.csv",
+                 summary_path="outputs/baseline_model_summary.csv", horizon=28):
     sales, _, _, dcols = load_m5(raw_dir)
     arr = sales_array(sales, dcols)
     train_ends = [len(dcols) - 84, len(dcols) - 56, len(dcols) - 28]
@@ -65,6 +66,18 @@ def run_backtest(raw_dir="data/raw", output_path="outputs/baseline_backtest.csv"
     out = pd.DataFrame(rows)
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(output_path, index=False)
+    summary = (
+        out[out.segment != "ALL"]
+        .groupby(["segment", "model"], as_index=False)
+        .agg(
+            avg_wape=("wape", "mean"),
+            avg_mae=("mae", "mean"),
+            avg_rmse=("rmse", "mean"),
+            avg_bias_pct=("bias_pct", "mean"),
+        )
+    )
+    Path(summary_path).parent.mkdir(parents=True, exist_ok=True)
+    summary.to_csv(summary_path, index=False)
     return out
 
 

@@ -8,7 +8,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      PYTHONPATH: ${{ github.workspace }}
+      PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/src
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,4 +19,4 @@ jobs:
       - name: Syntax check
         run: python -m py_compile src/*.py tests/*.py
       - name: Unit tests
-        run: pytest -q tests/test_planning_logic.py
+        run: pytest -q tests

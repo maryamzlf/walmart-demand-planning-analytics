@@ -58,6 +58,8 @@ flowchart LR
 
 The public M5 data includes unit sales, weekly sell prices, calendar events, and SNAP indicators. It does **not** include Walmart on-hand inventory, purchase orders, vendor lead times, or actual replenishment decisions.
 
+A final QA pass also verified that the validation file is an exact prefix of the evaluation history for all **30,490 series × 1,913 validation days**, so the evaluation file is safely used as the canonical observed sales source.
+
 ## Demand segmentation
 
 Each item-store series is classified over the trailing 365 days using **ADI** and **CV²**:
@@ -79,14 +81,16 @@ For the leakage-safe priority-series holdout, LightGBM delivered:
 
 | Model | WAPE | RMSE | Bias |
 |---|---:|---:|---:|
-| **LightGBM** | **45.31%** | **4.33** | **-0.89%** |
+| **LightGBM** | **45.14%** | **4.30** | **-0.86%** |
 | 28-day moving average | 49.46% | 4.86 | -1.25% |
 | 8-week weekday average | 49.53% | 4.78 | -1.07% |
 | 7-day seasonal naive | 56.75% | 5.44 | -6.12% |
 
-**Result:** the priority LightGBM challenger reduced WAPE by **8.4% relative to the 28-day moving-average baseline**.
+**Result:** the priority LightGBM challenger reduced WAPE by **8.7% relative to the 28-day moving-average baseline**.
 
 The ML feature set includes recent demand lags, rolling demand level/volatility, weekly sell price, price change, weekday/month, event flags, state SNAP indicators, and product/store hierarchy identifiers.
+
+Price preparation is leakage-safe: prices are **forward-filled only** and initial pre-launch missing values are encoded as unavailable rather than backfilled from later weeks. M5-provided future-horizon prices are used only as known planning covariates for the competition horizon.
 
 ## Planner Action Center
 
@@ -102,7 +106,9 @@ The final item-store output translates the forecast into business-facing fields:
 - planner action recommendation
 - forecast model route
 
-The planning change signal is deliberately separate from forecast accuracy. When a 28-day moving-average route mechanically reproduces the latest 28-day total, the action layer falls back to the observed recent run-rate change rather than interpreting a structural 0% forecast change as evidence that demand is stable.
+The planning change signal is deliberately separate from forecast accuracy. When a 28-day moving-average route mechanically reproduces the latest 28-day total, the action layer falls back to recent run-rate movement. A symmetric zero-baseline fallback keeps new-demand and drop-to-zero cases finite instead of silently turning them into missing values.
+
+The final 28-day planning horizon totals about **1.242 million forecast units** versus **1.232 million units** in the prior 28 days, roughly **+0.9%** at the aggregate level. This is a planning output, not an out-of-sample accuracy claim.
 
 ## Inventory-scenario integrity
 
@@ -113,8 +119,15 @@ M5 does not contain observed inventory. To avoid overstating what the public dat
 - A-class service level: 95%
 - B-class service level: 90%
 - C-class service level: 85%
+- demand-volatility lookback: trailing 90 days
 
 These calculations are decision-support outputs, **not actual Walmart stock or order quantities**.
+
+## Final validation
+
+Before the Power BI build, the full project was rerun from the raw M5 ZIP through audit, segmentation, rolling backtests, leakage-safe ML holdout, final model routing, planner scenarios, and Power BI-ready output generation. Code-quality checks include syntax validation and **9 regression/unit tests**.
+
+See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage QA report and the issues corrected during the final review.
 
 ## Repository structure
 
@@ -123,10 +136,17 @@ These calculations are decision-support outputs, **not actual Walmart stock or o
 ├── .github/workflows/quality.yml
 ├── data/README.md
 ├── docs/
+│   ├── methodology.md
+│   ├── model_card.md
+│   ├── data_dictionary.md
+│   ├── dashboard_spec.md
+│   └── validation_report.md
 ├── outputs/
 ├── sql/planner_kpis.sql
 ├── src/
-├── tests/test_planning_logic.py
+├── tests/
+│   ├── test_planning_logic.py
+│   └── test_forecast_utils.py
 ├── config.yaml
 └── requirements.txt
 ```
@@ -140,7 +160,7 @@ These calculations are decision-support outputs, **not actual Walmart stock or o
 5. Reproduce the leakage-safe priority-model holdout: `python src/priority_model.py`
 6. Generate the final routed forecast and Power BI-ready planner tables: `python src/final_forecast.py`
 
-The final script creates `data/processed/planner_action_center.csv` and `data/processed/forecast_weekly_item_store.csv`. These larger derived files are intentionally excluded from Git and can be regenerated from the public source data.
+The scripts also regenerate the portfolio evidence files under `outputs/`, including baseline summaries, priority-model metrics, feature importance, segment summaries, and the planner-action sample. The larger `data/processed/` tables are intentionally excluded from Git and can be regenerated from the public source data.
 
 ## Power BI design
 

@@ -21,6 +21,24 @@ def _safe_change(current, reference):
     )
 
 
+def _symmetric_change(current, reference):
+    """Finite directional change signal in [-2, 2].
+
+    Unlike conventional percent change, this remains defined when one side of
+    the comparison is zero. It is used only for planner prioritization fallbacks,
+    not as the reported forecast-growth percentage.
+    """
+    current = np.asarray(current, dtype=float)
+    reference = np.asarray(reference, dtype=float)
+    denom = np.abs(current) + np.abs(reference)
+    return np.divide(
+        2.0 * (current - reference),
+        denom,
+        out=np.zeros(current.shape, dtype=float),
+        where=denom > 0,
+    )
+
+
 def add_planning_scenarios(
     segmentation: pd.DataFrame,
     sales_array: np.ndarray,
@@ -67,13 +85,19 @@ def add_planning_scenarios(
         avg_daily * (lead_time_days + review_period_days) + safety, 1
     )
 
-    # Planning-change signal: forecast-vs-prior when informative, otherwise the
-    # observed recent run-rate change. This avoids treating an MA28 route as
-    # evidence of "no change" simply because its 28-day forecast equals the
-    # latest 28-day average by construction.
+    # Decision signal: retain ordinary forecast growth when informative. If the
+    # forecast is mechanically flat (notably MA28), use recent run-rate movement.
+    # Symmetric change is used as the zero-baseline fallback so activations and
+    # drop-to-zero cases remain finite instead of disappearing as NaN.
+    forecast_signal = _symmetric_change(forecast_28, prior_28)
+    run_rate_signal = _symmetric_change(prior_28, preceding_28)
     planning_change = forecast_growth.copy()
-    ma_like = np.isfinite(forecast_growth) & (np.abs(forecast_growth) < 1e-9)
-    planning_change[ma_like] = recent_run_rate_change[ma_like]
+    flat_forecast = np.isfinite(forecast_growth) & (np.abs(forecast_growth) < 1e-9)
+    planning_change[flat_forecast] = run_rate_signal[flat_forecast]
+    zero_base_forecast = (~np.isfinite(forecast_growth)) & (forecast_28 > 0)
+    planning_change[zero_base_forecast] = forecast_signal[zero_base_forecast]
+    remaining_missing = ~np.isfinite(planning_change)
+    planning_change[remaining_missing] = run_rate_signal[remaining_missing]
     out["planning_change_signal_pct"] = np.round(planning_change * 100, 1)
 
     abc_score = out.abc_class.map({"A": 40, "B": 25, "C": 10}).to_numpy(float)

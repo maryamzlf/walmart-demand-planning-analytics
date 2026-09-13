@@ -8,7 +8,8 @@ from priority_model import _prepare_subset, _encodings, _training_frame, _fit, _
 from planning_outputs import add_planning_scenarios, save_planning_outputs
 
 
-def generate_final_forecast(raw_dir="data/raw", processed_dir="data/processed", horizon=28, n_priority=3000):
+def generate_final_forecast(raw_dir="data/raw", processed_dir="data/processed",
+                            portfolio_output_dir="outputs", horizon=28, n_priority=3000):
     processed_dir = Path(processed_dir)
     processed_dir.mkdir(parents=True, exist_ok=True)
     sales, calendar, prices, dcols = load_m5(raw_dir)
@@ -48,6 +49,36 @@ def generate_final_forecast(raw_dir="data/raw", processed_dir="data/processed", 
         frame["forecast_units"] = np.round(block, 2)
         weekly.append(frame)
     pd.concat(weekly, ignore_index=True).to_csv(processed_dir / "forecast_weekly_item_store.csv", index=False)
+
+    portfolio_output_dir = Path(portfolio_output_dir)
+    portfolio_output_dir.mkdir(parents=True, exist_ok=True)
+    segment_summary = (
+        planning.groupby("demand_segment", as_index=False)
+        .agg(
+            series=("id", "count"),
+            units_365d=("units_365d", "sum"),
+            revenue_365d=("revenue_365d", "sum"),
+            forecast_28d_units=("forecast_28d_units", "sum"),
+            avg_demand_risk_score=("demand_risk_score", "mean"),
+        )
+    )
+    segment_summary["revenue_share_pct"] = (
+        100.0 * segment_summary.revenue_365d / segment_summary.revenue_365d.sum()
+    )
+    segment_summary.to_csv(portfolio_output_dir / "segment_summary.csv", index=False)
+
+    sample_cols = [
+        "item_id", "store_id", "dept_id", "cat_id", "abc_xyz", "demand_segment",
+        "revenue_365d", "preceding_28d_units", "prior_28d_units", "forecast_28d_units",
+        "forecast_growth_pct", "recent_run_rate_change_pct", "planning_change_signal_pct",
+        "demand_risk_score", "safety_stock_scenario_units", "reorder_point_scenario_units",
+        "forecast_model_route", "planner_action",
+    ]
+    (
+        planning.sort_values(["demand_risk_score", "revenue_365d"], ascending=[False, False])
+        .head(20)[sample_cols]
+        .to_csv(portfolio_output_dir / "planner_action_sample.csv", index=False)
+    )
     return planning, forecast
 
 

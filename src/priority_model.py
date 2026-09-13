@@ -19,9 +19,10 @@ def _priority_indices_pre_holdout(sales, calendar, prices, arr, dcols, train_end
     weeks = pd.unique(calendar.set_index("d").loc[dcols[start:train_end], "wm_yr_wk"])
     avg_price = prices[prices.wm_yr_wk.isin(weeks)].groupby(["item_id","store_id"]).sell_price.mean()
     keys = pd.MultiIndex.from_frame(sales[["item_id","store_id"]])
-    p = avg_price.reindex(keys).to_numpy()
-    fallback = prices.groupby(["item_id","store_id"]).sell_price.mean().reindex(keys).to_numpy()
-    p = np.where(np.isnan(p), fallback, p)
+    # Leakage-safe: priority ranking uses only prices available before the holdout.
+    # A missing pre-holdout price is treated as unavailable rather than filled
+    # from later weeks.
+    p = avg_price.reindex(keys).fillna(0.0).to_numpy()
     revenue_proxy = units * p
     return np.argsort(-revenue_proxy)[:n_priority]
 
@@ -36,7 +37,9 @@ def _prepare_subset(indices, sales, calendar, prices, arr, max_day=1969):
     weeks = pd.unique(cal.wm_yr_wk)
     pivot = p.pivot_table(index=["item_id","store_id"], columns="wm_yr_wk", values="sell_price", aggfunc="last")
     key = pd.MultiIndex.from_frame(meta[["item_id","store_id"]])
-    pivot = pivot.reindex(index=key, columns=weeks).ffill(axis=1).bfill(axis=1)
+    # Forward-fill only. Backfilling would inject a later price into earlier
+    # pre-launch periods. Initial missing prices are encoded as 0 (unavailable).
+    pivot = pivot.reindex(index=key, columns=weeks).ffill(axis=1).fillna(0.0)
     pw = pivot.to_numpy(np.float32)
     week_map = {w:i for i,w in enumerate(weeks)}
     daily_price = np.column_stack([pw[:,week_map[w]] for w in cal.wm_yr_wk.to_numpy()]).astype(np.float32)
@@ -111,7 +114,12 @@ def _recursive(model, history, cal, daily_price, codes, event, snap, start_t, ho
     return pred
 
 
-def evaluate_priority_model(raw_dir="data/raw", output_path="outputs/priority_model_holdout.json"):
+def evaluate_priority_model(
+    raw_dir="data/raw",
+    output_path="outputs/priority_model_holdout.json",
+    csv_path="outputs/priority_model_holdout.csv",
+    feature_path="outputs/priority_feature_importance.csv",
+):
     sales, calendar, prices, dcols = load_m5(raw_dir); arr = sales_array(sales, dcols)
     idx = _priority_indices_pre_holdout(sales, calendar, prices, arr, dcols)
     meta, y, cal, price = _prepare_subset(idx, sales, calendar, prices, arr)
@@ -127,7 +135,20 @@ def evaluate_priority_model(raw_dir="data/raw", output_path="outputs/priority_mo
         "SeasonalNaive7": metrics(actual,forecast_snaive7(y[:,:1913],28)),
     }
     result["relative_wape_improvement_vs_MA28"] = (result["MA28"]["wape"]-result["LightGBM"]["wape"])/result["MA28"]["wape"]
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True); Path(output_path).write_text(json.dumps(result,indent=2))
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(output_path).write_text(json.dumps(result, indent=2))
+
+    metric_rows = []
+    for model_name in ["LightGBM", "MA28", "WeekdayAvg8", "SeasonalNaive7"]:
+        metric_rows.append({"model": model_name, **result[model_name]})
+    pd.DataFrame(metric_rows).to_csv(csv_path, index=False)
+
+    gains = model.booster_.feature_importance(importance_type="gain")
+    importance = pd.DataFrame({"feature": FEATURES, "importance_gain": gains})
+    total_gain = float(importance.importance_gain.sum())
+    importance["share"] = importance.importance_gain / total_gain if total_gain else 0.0
+    importance.sort_values("importance_gain", ascending=False).to_csv(feature_path, index=False)
     return result
 
 

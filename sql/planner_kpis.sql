@@ -27,14 +27,16 @@ ORDER BY abc_xyz;
 
 -- Planner action queue
 SELECT TOP 100 item_id, store_id, dept_id, cat_id, abc_xyz, demand_segment, revenue_365d,
-       prior_28d_units, forecast_28d_units, forecast_growth_pct, demand_risk_score,
-       safety_stock_scenario_units, reorder_point_scenario_units, planner_action
+       preceding_28d_units, prior_28d_units, forecast_28d_units, forecast_growth_pct,
+       recent_run_rate_change_pct, planning_change_signal_pct, demand_risk_score,
+       safety_stock_scenario_units, reorder_point_scenario_units, forecast_model_route, planner_action
 FROM planner_action_center
 ORDER BY demand_risk_score DESC, revenue_365d DESC;
 
--- High-value demand inflections
-SELECT item_id, store_id, dept_id, abc_xyz, prior_28d_units, forecast_28d_units,
-       forecast_growth_pct, planner_action
+-- High-value planning inflections. Use the planning signal rather than literal
+-- forecast growth so MA28-routed series are not structurally hidden at 0%.
+SELECT item_id, store_id, dept_id, abc_xyz, preceding_28d_units, prior_28d_units,
+       forecast_28d_units, forecast_growth_pct, planning_change_signal_pct, planner_action
 FROM planner_action_center
-WHERE abc_class = 'A' AND ABS(forecast_growth_pct) >= 20
-ORDER BY ABS(forecast_growth_pct) DESC;
+WHERE abc_class = 'A' AND ABS(planning_change_signal_pct) >= 20
+ORDER BY ABS(planning_change_signal_pct) DESC;

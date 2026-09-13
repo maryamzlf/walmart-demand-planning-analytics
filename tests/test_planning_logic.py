@@ -24,7 +24,7 @@ def test_scenario_outputs_nonnegative():
 def test_ma28_like_forecast_uses_recent_run_rate_as_planning_signal():
     sales = np.ones((2, 90), dtype=float)
     sales[:, -56:-28] = 0.5
-    forecast = np.ones((2, 28), dtype=float)  # equals prior-28 average
+    forecast = np.ones((2, 28), dtype=float)
     out = add_planning_scenarios(_seg(), sales, forecast)
     assert (out.forecast_growth_pct == 0).all()
     assert (out.planning_change_signal_pct > 0).all()
@@ -35,6 +35,7 @@ def test_zero_reference_growth_is_not_reported_as_infinite():
     forecast = np.ones((2, 28), dtype=float)
     out = add_planning_scenarios(_seg(), sales, forecast)
     assert out.forecast_growth_pct.isna().all()
+    assert (out.planning_change_signal_pct == 200.0).all()
     assert np.isfinite(out.demand_risk_score).all()
 
 
@@ -46,3 +47,12 @@ def test_invalid_horizon_is_rejected():
 def test_invalid_lead_time_is_rejected():
     with pytest.raises(ValueError):
         add_planning_scenarios(_seg(), np.ones((2, 90)), np.ones((2, 28)), lead_time_days=0)
+
+
+def test_ma28_reactivation_from_zero_baseline_has_finite_signal():
+    sales = np.zeros((2, 90), dtype=float)
+    sales[:, -28:] = 1.0
+    forecast = np.ones((2, 28), dtype=float)
+    out = add_planning_scenarios(_seg(), sales, forecast)
+    assert (out.forecast_growth_pct == 0).all()
+    assert (out.planning_change_signal_pct == 200.0).all()
