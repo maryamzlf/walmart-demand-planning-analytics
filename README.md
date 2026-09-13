@@ -22,6 +22,25 @@ A large share of retail demand is sparse and intermittent, so forcing one foreca
 
 The model architecture is driven by backtest evidence rather than by model complexity for its own sake.
 
+## Planning architecture
+
+```mermaid
+flowchart LR
+    A[M5 sales + calendar + price] --> B[Data quality audit]
+    B --> C[ADI / CV² demand segmentation]
+    C --> D[ABC revenue + XYZ variability]
+    D --> E{Forecast router}
+    E -->|Top 3,000 value series| F[Global LightGBM]
+    E -->|Smooth long tail| G[8-week weekday average]
+    E -->|Intermittent / Erratic / Lumpy| H[28-day moving average]
+    F --> I[28-day forecast]
+    G --> I
+    H --> I
+    I --> J[Scenario safety stock / reorder point]
+    J --> K[Planner Action Center]
+    K --> L[Power BI-ready outputs]
+```
+
 ## Dataset audit
 
 | Metric | Result |
@@ -84,6 +103,7 @@ The final item-store output translates the forecast into business-facing fields:
 - reorder-point scenario
 - target-stock scenario
 - planner action recommendation
+- forecast model route
 
 Example actions include:
 
@@ -108,6 +128,7 @@ These calculations are decision-support outputs, **not actual Walmart stock or o
 
 ```text
 .
+├── .github/workflows/quality.yml
 ├── data/
 │   └── README.md
 ├── docs/
@@ -133,6 +154,7 @@ These calculations are decision-support outputs, **not actual Walmart stock or o
 │   ├── backtest.py
 │   ├── priority_model.py
 │   ├── planning_outputs.py
+│   ├── final_forecast.py
 │   └── run_pipeline.py
 ├── tests/
 │   └── test_planning_logic.py
@@ -145,8 +167,11 @@ These calculations are decision-support outputs, **not actual Walmart stock or o
 1. Download the **M5 Forecasting - Accuracy** files from Kaggle.
 2. Put `calendar.csv`, `sales_train_evaluation.csv`, and `sell_prices.csv` in `data/raw/`.
 3. Install dependencies: `pip install -r requirements.txt`
-4. Run the core pipeline: `python src/run_pipeline.py`
-5. Evaluate the priority ML challenger: `python src/priority_model.py`
+4. Run the core audit / segmentation / backtest pipeline: `python src/run_pipeline.py`
+5. Reproduce the leakage-safe priority-model holdout: `python src/priority_model.py`
+6. Generate the final routed forecast and Power BI-ready planner tables: `python src/final_forecast.py`
+
+The final script creates `data/processed/planner_action_center.csv` and `data/processed/forecast_weekly_item_store.csv`. These larger derived files are intentionally excluded from Git and can be regenerated from the public source data.
 
 ## Power BI design
 
@@ -158,7 +183,8 @@ The planned report contains five decision-oriented pages: Executive Planning Ove
 **Forecasting:** rolling-origin validation, intermittent-demand benchmarking, global ML forecasting  
 **Planning:** ABC-XYZ, ADI/CV² segmentation, service-level scenarios, safety stock / reorder point  
 **SQL:** planner KPI and action-queue queries  
-**BI:** Power BI-ready data model and dashboard specification
+**BI:** Power BI-ready data model and dashboard specification  
+**Engineering:** reproducible scripts, unit test, GitHub Actions code-quality check
 
 ## Notes on responsible interpretation
 
