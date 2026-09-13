@@ -38,6 +38,8 @@ Weekly sell price at `store_id × item_id × wm_yr_wk` grain.
 | `forecast_growth_pct` | Conventional forecast vs prior-28-day percent change; blank when the prior period is zero |
 | `recent_run_rate_change_pct` | Conventional prior-28 vs preceding-28 percent change; blank when the preceding period is zero |
 | `planning_change_signal_pct` | Planner prioritization signal: forecast growth when informative, otherwise recent run-rate movement with a finite symmetric zero-baseline fallback |
+| `avg_daily_forecast` | Routed 28-day forecast divided by 28; base demand-rate input for scenario calculations |
+| `demand_sigma_90d` | Sample standard deviation of daily unit demand over the latest 90 observed days; exposed so Power BI what-if measures can recalculate safety stock transparently |
 | `service_level_scenario` | Service-level assumption by ABC class |
 | `lead_time_scenario_days` | Assumed replenishment lead time |
 | `review_period_scenario_days` | Assumed review cycle |
