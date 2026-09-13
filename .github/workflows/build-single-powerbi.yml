@@ -1,0 +1,131 @@
+name: build-single-powerbi
+
+on:
+  push:
+    branches: [powerbi-single-file-build]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install analytics dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download public M5 source data
+        run: |
+          mkdir -p data/raw /tmp/m5
+          curl -L --fail --retry 4 --retry-delay 3 \
+            -o /tmp/m5/m5.zip \
+            'https://zenodo.org/records/12636070/files/m5-forecasting-accuracy.zip?download=1'
+          unzip -j -q /tmp/m5/m5.zip 'calendar.csv' 'sales_train_evaluation.csv' 'sell_prices.csv' -d data/raw
+          ls -lh data/raw
+
+      - name: Rebuild validated analytics outputs
+        env:
+          PYTHONPATH: src
+        run: |
+          python src/run_pipeline.py
+          python src/priority_model.py
+          python src/final_forecast.py
+
+      - name: Prepare Power BI keys and weekly dates
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          from pathlib import Path
+          p = Path('data/processed/planner_action_center.csv')
+          w = Path('data/processed/forecast_weekly_item_store.csv')
+          planner = pd.read_csv(p)
+          weekly = pd.read_csv(w)
+          planner['item_store_key'] = planner['item_id'].astype(str) + '|' + planner['store_id'].astype(str)
+          weekly['item_store_key'] = weekly['item_id'].astype(str) + '|' + weekly['store_id'].astype(str)
+          weekly['week_start_date'] = pd.to_datetime(weekly['week_start_date'])
+          weekly['week_end_date'] = weekly['week_start_date'] + pd.Timedelta(days=6)
+          planner.to_csv(p, index=False)
+          weekly.to_csv(w, index=False)
+          assert len(planner) == 30490
+          assert planner['item_store_key'].is_unique
+          assert len(weekly) == 121960
+          assert weekly.groupby('item_store_key').size().eq(4).all()
+          print('Power BI source rows:', len(planner), len(weekly))
+          PY
+
+      - name: Generate pbi-tools PbixProj source
+        run: |
+          gzip -dc tools/build_real_pbit_source.py.gz > /tmp/build_real_pbit_source.py
+          python /tmp/build_real_pbit_source.py
+          cat build/walmart_pbit_source_qa.json
+
+      - name: Download pbi-tools Core 1.2.0
+        run: |
+          curl -L --fail --retry 4 \
+            -o /tmp/pbi-tools.zip \
+            'https://github.com/pbi-tools/pbi-tools/releases/download/1.2.0/pbi-tools.core.1.2.0_linux-x64.zip'
+          mkdir -p /tmp/pbi-tools
+          unzip -q /tmp/pbi-tools.zip -d /tmp/pbi-tools
+          TOOL="$(find /tmp/pbi-tools -type f \( -name 'pbi-tools.core' -o -name 'pbi-tools.core.exe' \) | head -1)"
+          test -n "$TOOL"
+          chmod +x "$TOOL"
+          echo "$TOOL" > /tmp/pbi-tools-path
+          "$TOOL" info
+
+      - name: Compile real PBIT
+        run: |
+          TOOL="$(cat /tmp/pbi-tools-path)"
+          "$TOOL" compile build/walmart_pbit_pbixproj build/Walmart_M5_Demand_Planning.pbit PBIT true
+          ls -lh build/Walmart_M5_Demand_Planning.pbit
+
+      - name: Validate compiled Power BI package
+        run: |
+          python - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          p = Path('build/Walmart_M5_Demand_Planning.pbit')
+          assert p.exists() and p.stat().st_size > 100_000
+          with zipfile.ZipFile(p) as z:
+              names = z.namelist()
+              def find_part(suffix):
+                  matches = [n for n in names if n.replace('\\','/').lstrip('/').endswith(suffix)]
+                  assert matches, (suffix, names[:50])
+                  return matches[0]
+              def read_json(name):
+                  b = z.read(name)
+                  for enc in ('utf-16-le','utf-8-sig','utf-8'):
+                      try:
+                          return json.loads(b.decode(enc))
+                      except Exception:
+                          pass
+                  raise AssertionError('Could not decode '+name)
+              model = read_json(find_part('DataModelSchema'))
+              report = read_json(find_part('Report/Layout'))
+              tables = model['model']['tables']
+              rels = model['model'].get('relationships', [])
+              sections = report.get('sections', [])
+              visuals = sum(len(s.get('visualContainers', [])) for s in sections)
+              assert len(tables) == 8, len(tables)
+              assert len(rels) == 1, len(rels)
+              assert len(sections) == 5, len(sections)
+              assert visuals == 67, visuals
+              table_names = {t['name'] for t in tables}
+              assert {'PlannerActionCenter','ForecastWeekly','PriorityModelHoldout'} <= table_names
+              print('VALIDATED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals')
+          PY
+
+      - name: Upload single Power BI file
+        uses: actions/upload-artifact@v4
+        with:
+          name: Walmart_M5_Demand_Planning_PBIT
+          path: build/Walmart_M5_Demand_Planning.pbit
+          retention-days: 2
+          if-no-files-found: error
