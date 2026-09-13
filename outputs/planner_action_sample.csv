@@ -1,0 +1,21 @@
+item_id,store_id,dept_id,cat_id,abc_xyz,demand_segment,revenue_365d,prior_28d_units,forecast_28d_units,forecast_growth_pct,demand_risk_score,safety_stock_scenario_units,reorder_point_scenario_units,planner_action
+FOODS_3_444,CA_3,FOODS_3,FOODS,AZ,Lumpy,10105.9,281,514.9,83.3,100.0,40.2,297.6,Protect availability; validate supply and raise coverage
+FOODS_3_441,CA_3,FOODS_3,FOODS,AZ,Lumpy,6290.86,0,80.8,,100.0,0.0,40.4,Protect availability; validate supply and raise coverage
+FOODS_3_404,CA_3,FOODS_3,FOODS,AZ,Lumpy,5005.6,2,189.1,9353.5,100.0,43.0,137.6,Protect availability; validate supply and raise coverage
+HOUSEHOLD_1_427,WI_2,HOUSEHOLD_1,HOUSEHOLD,AZ,Lumpy,4744.16,0,46.9,,100.0,39.4,62.9,Protect availability; validate supply and raise coverage
+FOODS_3_764,CA_2,FOODS_3,FOODS,AZ,Lumpy,4629.1,103,195.3,89.6,100.0,31.9,129.6,Protect availability; validate supply and raise coverage
+HOUSEHOLD_1_356,WI_2,HOUSEHOLD_1,HOUSEHOLD,AZ,Lumpy,4237.56,0,46.8,,100.0,33.9,57.3,Protect availability; validate supply and raise coverage
+FOODS_3_524,CA_3,FOODS_3,FOODS,AZ,Lumpy,3534.92,0,232.6,,100.0,32.0,148.3,Protect availability; validate supply and raise coverage
+FOODS_3_073,CA_1,FOODS_3,FOODS,AZ,Lumpy,3179.56,0,89.8,,100.0,12.7,57.5,Protect availability; validate supply and raise coverage
+FOODS_1_055,TX_1,FOODS_1,FOODS,AZ,Lumpy,5167.36,62,102.4,65.1,98.0,17.1,68.3,Protect availability; validate supply and raise coverage
+FOODS_2_140,WI_2,FOODS_2,FOODS,AZ,Lumpy,6127.72,37,57.1,54.3,95.9,11.0,39.6,Protect availability; validate supply and raise coverage
+FOODS_2_352,WI_2,FOODS_2,FOODS,AZ,Lumpy,8652.66,86,125.1,45.4,94.1,27.5,90.1,Protect availability; validate supply and raise coverage
+FOODS_3_772,TX_1,FOODS_3,FOODS,AZ,Lumpy,4202.84,42,59.9,42.7,93.5,11.5,41.4,Protect availability; validate supply and raise coverage
+FOODS_2_128,WI_2,FOODS_2,FOODS,AZ,Lumpy,3242.8,761,492.9,-35.2,92.0,114.6,361.1,Review excess-risk exposure before replenishment
+FOODS_3_772,TX_2,FOODS_3,FOODS,AZ,Lumpy,4420.44,32,42.1,31.7,91.3,7.2,28.3,Protect availability; validate supply and raise coverage
+FOODS_1_180,TX_1,FOODS_1,FOODS,AZ,Lumpy,5194.37,27,34.6,28.2,90.6,11.2,28.5,Protect availability; validate supply and raise coverage
+HOBBIES_1_236,CA_1,HOBBIES_1,HOBBIES,AZ,Intermittent,8327.88,11,24.9,126.2,90.0,3.0,15.5,Protect availability; validate supply and raise coverage
+HOUSEHOLD_1_366,WI_2,HOUSEHOLD_1,HOUSEHOLD,AZ,Intermittent,6204.36,0,29.7,,90.0,39.7,54.5,Protect availability; validate supply and raise coverage
+HOUSEHOLD_1_086,TX_2,HOUSEHOLD_1,HOUSEHOLD,AY,Lumpy,5976.78,23,45.6,98.4,90.0,8.2,31.0,Protect availability; validate supply and raise coverage
+HOUSEHOLD_1_310,TX_3,HOUSEHOLD_1,HOUSEHOLD,AY,Lumpy,5624.79,0,33.8,,90.0,8.4,25.3,Protect availability; validate supply and raise coverage
+FOODS_3_808,WI_3,FOODS_3,FOODS,AZ,Intermittent,5082.58,0,296.7,,90.0,61.7,210.0,Protect availability; validate supply and raise coverage
