@@ -30,7 +30,7 @@ Validated directly from `m5-forecasting-accuracy.zip`:
 - no duplicate `store_id × item_id × wm_yr_wk` price keys
 - 1,969 unique and contiguous calendar day keys (`d_1 ... d_1969`)
 - no duplicate item-store series IDs
-- full chunkwise equality check confirms all 30,490 validation rows and all `d_1 ... d_1913` values are exactly contained in the evaluation file
+- full chunkwise equality check confirms all 30,490 validation rows and all `d_1 ... d_1913` values are exactly contained in the evaluation file after normalizing the official `_validation` / `_evaluation` ID suffixes
 - segmentation regenerated successfully with no missing ABC / XYZ / demand-pattern classes
 - ABC modeled-revenue shares reproduce approximately 80% / 15% / 5%
 
@@ -115,6 +115,27 @@ Status: **PASS**
 - SQL action queries use the planning-change signal so MA28-routed series are not structurally hidden at 0% literal forecast growth
 - Power BI specification references the corrected fields and current model outputs
 - all model-performance numbers in README, methodology, model card, and executive findings are aligned to the final leakage-safe run
+
+## Two additional independent repeat passes
+
+After the final three-stage validation above, the analytical pipeline was independently recomputed **two more times in fresh Python processes** from the raw M5 evaluation, calendar, and price files. Each repeat separately executed the data checks, demand segmentation, three rolling baseline folds, leakage-safe LightGBM holdout, final LightGBM route, scenario-planning logic, and output invariants.
+
+Both repeats returned **PASS** and were numerically identical:
+
+- zero-demand share: **67.9978%**
+- demand-pattern counts: 23,096 Intermittent; 3,761 Lumpy; 2,939 Smooth; 694 Erratic
+- baseline routing: Smooth → WeekdayAvg8; all other demand segments → MA28
+- LightGBM holdout WAPE: **45.1408%**
+- MA28 holdout WAPE: **49.4629%**
+- relative WAPE improvement: **8.7379%**
+- final route counts: 26,150 MA28; 3,000 LightGBM; 1,340 WeekdayAvg8
+- final 28-day forecast: **1,242,423.125 units**
+- prior 28-day units: **1,231,764**
+- aggregate planning change: **+0.8654%**
+- maximum weekly-to-28-day reconciliation difference: **0.0601 units**
+- deterministic final-output fingerprint was identical in both runs: `587214ccbf0dc2865059e4f31ee1b46233766dd3c9be77b982431a8ac58c8364`
+
+This repeatability check provides an additional control against transient execution differences or accidental non-determinism before the Power BI layer is built.
 
 ## Pre-Power-BI conclusion
 
