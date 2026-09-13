@@ -16,6 +16,7 @@ def test_scenario_outputs_nonnegative():
     sales = np.ones((2, 90), dtype=float)
     forecast = np.ones((2, 28), dtype=float)
     out = add_planning_scenarios(_seg(), sales, forecast)
+    assert (out.demand_sigma_90d >= 0).all()
     assert (out.safety_stock_scenario_units >= 0).all()
     assert (out.reorder_point_scenario_units >= 0).all()
     assert (out.target_stock_scenario_units >= out.reorder_point_scenario_units).all()
