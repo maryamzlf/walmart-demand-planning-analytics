@@ -1,0 +1,20 @@
+{
+  "name": "Retail Demand Planning - Executive",
+  "dataColors": ["#1F5A94", "#0F766E", "#D97706", "#7C3AED", "#B42318", "#4B5563", "#0891B2", "#65A30D"],
+  "background": "#F7F9FC",
+  "foreground": "#172033",
+  "tableAccent": "#1F5A94",
+  "good": "#0F766E",
+  "neutral": "#D97706",
+  "bad": "#B42318",
+  "visualStyles": {
+    "*": {
+      "*": {
+        "title": [{"show": true, "fontFamily": "Segoe UI Semibold", "fontSize": 12, "fontColor": {"solid": {"color": "#172033"}}, "alignment": "left"}],
+        "background": [{"show": true, "color": {"solid": {"color": "#FFFFFF"}}, "transparency": 0}],
+        "border": [{"show": true, "color": {"solid": {"color": "#E3E8EF"}}, "radius": 6}],
+        "visualHeader": [{"show": false}]
+      }
+    }
+  }
+}
