@@ -39,25 +39,43 @@ jobs:
           python src/priority_model.py
           python src/final_forecast.py
 
-      - name: Prepare Power BI keys and weekly dates
+      - name: Prepare and sanitize Power BI source tables
         run: |
           python - <<'PY'
+          import numpy as np
           import pandas as pd
           from pathlib import Path
+
           p = Path('data/processed/planner_action_center.csv')
           w = Path('data/processed/forecast_weekly_item_store.csv')
           planner = pd.read_csv(p)
           weekly = pd.read_csv(w)
+
           planner['item_store_key'] = planner['item_id'].astype(str) + '|' + planner['store_id'].astype(str)
           weekly['item_store_key'] = weekly['item_id'].astype(str) + '|' + weekly['store_id'].astype(str)
           weekly['week_start_date'] = pd.to_datetime(weekly['week_start_date'])
           weekly['week_end_date'] = weekly['week_start_date'] + pd.Timedelta(days=6)
+
+          # Nine no-demand series have mathematically infinite ADI. Infinity is
+          # analytically meaningful as "no observed demand interval", but it is
+          # not a valid numeric value for Power BI's Double.Type import. Store it
+          # as blank while preserving their Lumpy/CZ segmentation and actions.
+          numeric_cols = planner.select_dtypes(include=[np.number]).columns
+          inf_before = int(np.isinf(planner[numeric_cols].to_numpy(dtype=float, na_value=np.nan)).sum())
+          planner[numeric_cols] = planner[numeric_cols].replace([np.inf, -np.inf], np.nan)
+          inf_after = int(np.isinf(planner[numeric_cols].to_numpy(dtype=float, na_value=np.nan)).sum())
+          print('Non-finite infinities sanitized:', inf_before, '->', inf_after)
+          assert inf_before == 9, inf_before
+          assert inf_after == 0
+
           planner.to_csv(p, index=False)
           weekly.to_csv(w, index=False)
+
           assert len(planner) == 30490
           assert planner['item_store_key'].is_unique
           assert len(weekly) == 121960
           assert weekly.groupby('item_store_key').size().eq(4).all()
+          assert pd.to_numeric(planner['adi'], errors='coerce').replace([np.inf, -np.inf], np.nan).notna().sum() == 30481
           print('Power BI source rows:', len(planner), len(weekly))
           PY
 
@@ -127,11 +145,12 @@ jobs:
           "$TOOL" compile build/walmart_pbit_pbixproj build/Walmart_M5_Demand_Planning.pbit PBIT true
           ls -lh build/Walmart_M5_Demand_Planning.pbit
 
-      - name: Validate compiled Power BI package
+      - name: Validate compiled Power BI package and embedded planner data
         run: |
           python - <<'PY'
-          import json, zipfile
+          import base64, json, re, zipfile, zlib
           from pathlib import Path
+
           p = Path('build/Walmart_M5_Demand_Planning.pbit')
           assert p.exists() and p.stat().st_size > 100_000
           with zipfile.ZipFile(p) as z:
@@ -148,6 +167,7 @@ jobs:
                       except Exception:
                           pass
                   raise AssertionError('Could not decode '+name)
+
               model = read_json(find_part('DataModelSchema'))
               report = read_json(find_part('Report/Layout'))
               tables = model['model']['tables']
@@ -160,19 +180,36 @@ jobs:
               assert visuals == 67, visuals
               table_names = {t['name'] for t in tables}
               assert {'PlannerActionCenter','ForecastWeekly','PriorityModelHoldout'} <= table_names
+
               max_m_line = 0
+              planner_rows = None
               for t in tables:
                   for part in t.get('partitions', []):
                       src = part.get('source', {})
-                      if src.get('type') == 'm':
-                          expr = src.get('expression', [''])
-                          text = '\n'.join(expr) if isinstance(expr, list) else expr
-                          assert '= type nullable text' not in text, t['name']
-                          assert 'let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [' in text, t['name']
-                          lines = expr if isinstance(expr, list) else text.splitlines()
-                          max_m_line = max(max_m_line, *(len(x) for x in lines))
+                      if src.get('type') != 'm':
+                          continue
+                      expr = src.get('expression', [''])
+                      text = '\n'.join(expr) if isinstance(expr, list) else expr
+                      assert '= type nullable text' not in text, t['name']
+                      assert 'let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [' in text, t['name']
+                      lines = expr if isinstance(expr, list) else text.splitlines()
+                      max_m_line = max(max_m_line, *(len(x) for x in lines))
+
+                      if t['name'] == 'PlannerActionCenter':
+                          prefix = text.split('}),\n    Raw =')[0]
+                          chunks = re.findall(r'"([A-Za-z0-9+/=]{20,})"', prefix)
+                          raw = zlib.decompress(base64.b64decode(''.join(chunks)), -15)
+                          planner_rows = json.loads(raw)
+                          # ADI is source column 11 (0-based). The nine no-demand
+                          # rows must now be null, never the literal string "inf".
+                          assert len(planner_rows) == 30490
+                          adi = [r[11] for r in planner_rows]
+                          assert sum(v is None for v in adi) == 9
+                          assert not any(isinstance(v, str) and v.lower() in {'inf','infinity','-inf','-infinity'} for v in adi)
+
               assert max_m_line < 32766, max_m_line
-              print('VALIDATED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line)
+              assert planner_rows is not None
+              print('VALIDATED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line, '; planner ADI blanks', sum(r[11] is None for r in planner_rows))
           PY
 
       - name: Upload single Power BI file
