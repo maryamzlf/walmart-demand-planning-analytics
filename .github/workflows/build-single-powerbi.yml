@@ -64,6 +64,7 @@ jobs:
       - name: Generate pbi-tools PbixProj source
         run: |
           gzip -dc tools/build_real_pbit_source.py.gz > /tmp/build_real_pbit_source.py
+          sed -i "s#ROOT/'build'/'walmart_pbit_source_qa.json'.write_text#(ROOT/'build'/'walmart_pbit_source_qa.json').write_text#" /tmp/build_real_pbit_source.py
           python /tmp/build_real_pbit_source.py
           cat build/walmart_pbit_source_qa.json
 
