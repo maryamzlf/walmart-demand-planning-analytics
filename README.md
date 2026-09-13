@@ -92,25 +92,17 @@ The ML feature set includes recent demand lags, rolling demand level/volatility,
 
 The final item-store output translates the forecast into business-facing fields:
 
-- ABC-XYZ class
-- demand pattern
-- trailing revenue and demand
-- next-28-day forecast
-- forecast growth vs prior 28 days
+- ABC-XYZ class and demand pattern
+- trailing revenue and recent demand
+- next-28-day forecast and forecast-vs-prior change
+- recent 28-day run-rate change
+- **planning change signal** used for prioritization
 - demand-risk score
-- service-level scenario
-- safety-stock scenario
-- reorder-point scenario
-- target-stock scenario
+- service-level, safety-stock, reorder-point, and target-stock scenarios
 - planner action recommendation
 - forecast model route
 
-Example actions include:
-
-- **Protect availability; validate supply and raise coverage**
-- **Review excess-risk exposure before replenishment**
-- **High-value volatile demand; use frequent planner review**
-- **Lean replenishment; minimize long-tail inventory exposure**
+The planning change signal is deliberately separate from forecast accuracy. When a 28-day moving-average route mechanically reproduces the latest 28-day total, the action layer falls back to the observed recent run-rate change rather than interpreting a structural 0% forecast change as evidence that demand is stable.
 
 ## Inventory-scenario integrity
 
@@ -129,35 +121,12 @@ These calculations are decision-support outputs, **not actual Walmart stock or o
 ```text
 .
 ├── .github/workflows/quality.yml
-├── data/
-│   └── README.md
+├── data/README.md
 ├── docs/
-│   ├── project_charter.md
-│   ├── methodology.md
-│   ├── data_dictionary.md
-│   ├── model_card.md
-│   └── dashboard_spec.md
 ├── outputs/
-│   ├── data_audit.json
-│   ├── baseline_model_summary.csv
-│   ├── priority_model_holdout.csv
-│   ├── priority_feature_importance.csv
-│   ├── segment_summary.csv
-│   ├── planner_action_sample.csv
-│   └── executive_findings.md
-├── sql/
-│   └── planner_kpis.sql
+├── sql/planner_kpis.sql
 ├── src/
-│   ├── common.py
-│   ├── data_audit.py
-│   ├── segmentation.py
-│   ├── backtest.py
-│   ├── priority_model.py
-│   ├── planning_outputs.py
-│   ├── final_forecast.py
-│   └── run_pipeline.py
-├── tests/
-│   └── test_planning_logic.py
+├── tests/test_planning_logic.py
 ├── config.yaml
 └── requirements.txt
 ```
@@ -184,7 +153,7 @@ The planned report contains five decision-oriented pages: Executive Planning Ove
 **Planning:** ABC-XYZ, ADI/CV² segmentation, service-level scenarios, safety stock / reorder point  
 **SQL:** planner KPI and action-queue queries  
 **BI:** Power BI-ready data model and dashboard specification  
-**Engineering:** reproducible scripts, unit test, GitHub Actions code-quality check
+**Engineering:** reproducible scripts, regression tests, GitHub Actions code-quality check
 
 ## Notes on responsible interpretation
 
