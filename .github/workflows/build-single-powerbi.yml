@@ -56,10 +56,6 @@ jobs:
           weekly['week_start_date'] = pd.to_datetime(weekly['week_start_date'])
           weekly['week_end_date'] = weekly['week_start_date'] + pd.Timedelta(days=6)
 
-          # Nine no-demand series have mathematically infinite ADI. Infinity is
-          # analytically meaningful as "no observed demand interval", but it is
-          # not a valid numeric value for Power BI's Double.Type import. Store it
-          # as blank while preserving their Lumpy/CZ segmentation and actions.
           numeric_cols = planner.select_dtypes(include=[np.number]).columns
           inf_before = int(np.isinf(planner[numeric_cols].to_numpy(dtype=float, na_value=np.nan)).sum())
           planner[numeric_cols] = planner[numeric_cols].replace([np.inf, -np.inf], np.nan)
@@ -106,6 +102,9 @@ jobs:
               assert 'let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [' in s, p
           print('Validated Power BI Enter Data M syntax for', len(files), 'queries')
           PY
+
+      - name: Apply portfolio polish
+        run: python tools/polish_powerbi_project.py build/walmart_pbit_pbixproj
 
       - name: Validate generated M source
         run: |
@@ -181,6 +180,10 @@ jobs:
               table_names = {t['name'] for t in tables}
               assert {'PlannerActionCenter','ForecastWeekly','PriorityModelHoldout'} <= table_names
 
+              pac = next(t for t in tables if t['name'] == 'PlannerActionCenter')
+              pac_cols = {c['name'] for c in pac.get('columns', [])}
+              assert {'State','Store','Department','Category','ABC Class','XYZ Class','ABC-XYZ','Demand Pattern','Item','Planner Action','Risk Score','Planning Change %'} <= pac_cols
+
               max_m_line = 0
               planner_rows = None
               for t in tables:
@@ -200,8 +203,6 @@ jobs:
                           chunks = re.findall(r'"([A-Za-z0-9+/=]{20,})"', prefix)
                           raw = zlib.decompress(base64.b64decode(''.join(chunks)), -15)
                           planner_rows = json.loads(raw)
-                          # ADI is source column 11 (0-based). The nine no-demand
-                          # rows must now be null, never the literal string "inf".
                           assert len(planner_rows) == 30490
                           adi = [r[11] for r in planner_rows]
                           assert sum(v is None for v in adi) == 9
@@ -209,7 +210,7 @@ jobs:
 
               assert max_m_line < 32766, max_m_line
               assert planner_rows is not None
-              print('VALIDATED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line, '; planner ADI blanks', sum(r[11] is None for r in planner_rows))
+              print('VALIDATED POLISHED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line, '; planner ADI blanks', sum(r[11] is None for r in planner_rows))
           PY
 
       - name: Upload single Power BI file
