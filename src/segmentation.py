@@ -49,10 +49,11 @@ def build_segmentation(raw_dir="data/raw", output_path="data/processed/segmentat
 
     order = np.argsort(-revenue)
     cumulative = np.cumsum(revenue[order]) / revenue.sum()
-    abc = np.empty(len(sales), dtype=object)
+    # Default the tail to C so every series receives a valid ABC class even
+    # under floating-point edge cases at the cumulative-share boundaries.
+    abc = np.full(len(sales), "C", dtype=object)
     abc[order[cumulative <= 0.80]] = "A"
     abc[order[(cumulative > 0.80) & (cumulative <= 0.95)]] = "B"
-    abc[order[cumulative > 0.95]] = "C"
 
     weekly_mean = weekly_units.mean(axis=1)
     weekly_std = weekly_units.std(axis=1, ddof=1)
