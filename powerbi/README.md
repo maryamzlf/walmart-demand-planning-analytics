@@ -1,10 +1,12 @@
 # Power BI Portfolio Report
 
-This folder contains the final Power BI portfolio template for the Walmart M5 Demand Planning Analytics project.
+This folder contains the final Power BI report and reusable template for the Walmart M5 Demand Planning Analytics project.
 
 ## Open the report
 
-Download `Walmart_M5_Demand_Planning_Portfolio.pbit` and open it with Power BI Desktop. The portfolio template contains embedded analytical outputs, so it does not depend on a local CSV folder path for initial review. Use **File → Save As** to create a `.pbix` copy on your computer if desired.
+For portfolio review, open **`Walmart_M5_Demand_Planning_Portfolio.pbix`** in Power BI Desktop. This is the final report file.
+
+A reusable **`Walmart_M5_Demand_Planning_Portfolio.pbit`** template is also included.
 
 ## Report pages
 
