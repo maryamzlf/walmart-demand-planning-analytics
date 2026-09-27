@@ -27,8 +27,8 @@ The unfiltered report should reproduce approximately:
 - Forecast units: **1.24M**
 - Prior 28-day units: **1.23M**
 - Aggregate forecast growth: **+0.9%**
-- Priority LightGBM WAPE: **45.14%**
-- Relative WAPE improvement vs MA28: **8.74%**
+- Priority LightGBM WAPE: **45.15%**
+- Relative WAPE improvement vs MA28: **8.71%**
 - Routes: **26,150 MA28 / 3,000 LightGBM / 1,340 WeekdayAvg8**
 
 ## Build reproducibility
