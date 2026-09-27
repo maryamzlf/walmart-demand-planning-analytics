@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: build-single-powerbi-main
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -75,7 +79,25 @@ jobs:
           assert len(weekly) == 121960
           assert weekly.groupby('item_store_key').size().eq(4).all()
           assert pd.to_numeric(planner['adi'], errors='coerce').replace([np.inf, -np.inf], np.nan).notna().sum() == 30481
+
+          # Regression checks against independently verified M5 aggregates.
+          assert abs(float(planner['revenue_365d'].sum()) - 45163441.21) < 1.0, planner['revenue_365d'].sum()
+          assert int(planner['units_365d'].sum()) == 14585821, planner['units_365d'].sum()
+          assert int(planner['prior_28d_units'].sum()) == 1231764, planner['prior_28d_units'].sum()
+          assert planner['demand_segment'].value_counts().to_dict() == {
+              'Intermittent': 23096, 'Lumpy': 3761, 'Smooth': 2939, 'Erratic': 694
+          }, planner['demand_segment'].value_counts().to_dict()
+          assert planner['forecast_model_route'].value_counts().to_dict() == {
+              'MA28': 26150, 'LightGBM': 3000, 'WeekdayAvg8': 1340
+          }, planner['forecast_model_route'].value_counts().to_dict()
+          abc_revenue = planner.groupby('abc_class')['revenue_365d'].sum() / planner['revenue_365d'].sum()
+          assert set(abc_revenue.index) == {'A','B','C'}, abc_revenue
+          assert abs(float(abc_revenue['A']) - 0.80) < 0.002, abc_revenue
+          weekly_total = float(weekly['forecast_units'].sum())
+          planner_total = float(planner['forecast_28d_units'].sum())
+          assert abs(weekly_total - planner_total) < 1.0, (weekly_total, planner_total)
           print('Power BI source rows:', len(planner), len(weekly))
+          print('Verified source KPIs:', planner_total, planner['revenue_365d'].sum(), abc_revenue.to_dict())
           PY
 
       - name: Generate pbi-tools PbixProj source
@@ -189,6 +211,8 @@ jobs:
 
               max_m_line = 0
               planner_rows = None
+              weekly_rows = None
+              priority_rows = None
               for t in tables:
                   for part in t.get('partitions', []):
                       src = part.get('source', {})
@@ -201,19 +225,61 @@ jobs:
                       lines = expr if isinstance(expr, list) else text.splitlines()
                       max_m_line = max(max_m_line, *(len(x) for x in lines))
 
-                      if t['name'] == 'PlannerActionCenter':
+                      if t['name'] in {'PlannerActionCenter', 'ForecastWeekly', 'PriorityModelHoldout'}:
                           prefix = text.split('}),\n    Raw =')[0]
                           chunks = re.findall(r'"([A-Za-z0-9+/=]{20,})"', prefix)
                           raw = zlib.decompress(base64.b64decode(''.join(chunks)), -15)
-                          planner_rows = json.loads(raw)
-                          assert len(planner_rows) == 30490
-                          adi = [r[11] for r in planner_rows]
-                          assert sum(v is None for v in adi) == 9
-                          assert not any(isinstance(v, str) and v.lower() in {'inf','infinity','-inf','-infinity'} for v in adi)
+                          decoded = json.loads(raw)
+                          if t['name'] == 'PlannerActionCenter':
+                              planner_rows = decoded
+                              assert len(planner_rows) == 30490
+                              adi = [r[11] for r in planner_rows]
+                              assert sum(v is None for v in adi) == 9
+                              assert not any(isinstance(v, str) and v.lower() in {'inf','infinity','-inf','-infinity'} for v in adi)
+                          elif t['name'] == 'ForecastWeekly':
+                              weekly_rows = decoded
+                              assert len(weekly_rows) == 121960
+                          elif t['name'] == 'PriorityModelHoldout':
+                              priority_rows = decoded
+                              assert len(priority_rows) == 4
 
               assert max_m_line < 32766, max_m_line
-              assert planner_rows is not None
-              print('VALIDATED POLISHED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line, '; planner ADI blanks', sum(r[11] is None for r in planner_rows))
+              assert planner_rows is not None and weekly_rows is not None and priority_rows is not None
+
+              # Raw embedded row order follows the generated source tables.
+              planner_revenue = sum(float(r[8]) for r in planner_rows)
+              planner_units = sum(int(float(r[7])) for r in planner_rows)
+              planner_prior = sum(int(float(r[19])) for r in planner_rows)
+              planner_forecast = sum(float(r[20]) for r in planner_rows)
+              routes = {}
+              segments = {}
+              for r in planner_rows:
+                  routes[r[35]] = routes.get(r[35], 0) + 1
+                  segments[r[13]] = segments.get(r[13], 0) + 1
+              assert abs(planner_revenue - 45163441.21) < 1.0, planner_revenue
+              assert planner_units == 14585821, planner_units
+              assert planner_prior == 1231764, planner_prior
+              assert routes == {'MA28': 26150, 'LightGBM': 3000, 'WeekdayAvg8': 1340}, routes
+              assert segments == {'Intermittent': 23096, 'Lumpy': 3761, 'Smooth': 2939, 'Erratic': 694}, segments
+              weekly_forecast = sum(float(r[10]) for r in weekly_rows)
+              assert abs(weekly_forecast - planner_forecast) < 1.0, (weekly_forecast, planner_forecast)
+
+              source_priority = pd.read_csv('outputs/priority_model_holdout.csv').set_index('model')
+              embedded_priority = {
+                  r[0]: {'wape': float(r[1]), 'mae': float(r[2]), 'rmse': float(r[3]), 'bias_pct': float(r[4])}
+                  for r in priority_rows
+              }
+              for model_name, vals in embedded_priority.items():
+                  for metric, value in vals.items():
+                      assert abs(value - float(source_priority.loc[model_name, metric])) < 1e-10, (model_name, metric, value, source_priority.loc[model_name, metric])
+
+              pac_measures = {m['name']: m.get('expression') for m in pac.get('measures', [])}
+              scenario_target = pac_measures.get('Scenario Target Stock Units')
+              scenario_safety = pac_measures.get('Scenario Safety Stock Units')
+              assert scenario_target and 'Baseline Target Stock Units' in str(scenario_target), scenario_target
+              assert scenario_safety and 'Baseline Safety Stock Units' in str(scenario_safety), scenario_safety
+
+              print('VALIDATED POLISHED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line, '; revenue', planner_revenue, '; forecast', planner_forecast)
           PY
 
       - name: Commit generated Power BI portfolio template
