@@ -95,9 +95,12 @@ jobs:
           assert abs(float(abc_revenue['A']) - 0.80) < 0.002, abc_revenue
           weekly_total = float(weekly['forecast_units'].sum())
           planner_total = float(planner['forecast_28d_units'].sum())
-          assert abs(weekly_total - planner_total) < 1.0, (weekly_total, planner_total)
+          weekly_by_key = weekly.groupby('item_store_key', as_index=True)['forecast_units'].sum()
+          planner_by_key = planner.set_index('item_store_key')['forecast_28d_units']
+          max_recon = float((weekly_by_key.reindex(planner_by_key.index) - planner_by_key).abs().max())
+          assert max_recon <= 0.061, max_recon
           print('Power BI source rows:', len(planner), len(weekly))
-          print('Verified source KPIs:', planner_total, planner['revenue_365d'].sum(), abc_revenue.to_dict())
+          print('Verified source KPIs:', planner_total, planner['revenue_365d'].sum(), abc_revenue.to_dict(), 'weekly max reconciliation', max_recon)
           PY
 
       - name: Generate pbi-tools PbixProj source
@@ -301,5 +304,20 @@ jobs:
         with:
           name: Walmart_M5_Demand_Planning_PBIT
           path: build/Walmart_M5_Demand_Planning.pbit
+          retention-days: 90
+          if-no-files-found: error
+
+
+      - name: Upload analytical evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: Walmart_M5_Demand_Planning_Evidence
+          path: |
+            outputs/baseline_model_summary.csv
+            outputs/priority_model_holdout.csv
+            outputs/priority_model_holdout.json
+            outputs/priority_feature_importance.csv
+            outputs/segment_summary.csv
+            outputs/planner_action_sample.csv
           retention-days: 90
           if-no-files-found: error
