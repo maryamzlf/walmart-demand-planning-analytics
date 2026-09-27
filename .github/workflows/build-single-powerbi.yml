@@ -5,6 +5,9 @@ on:
     branches: [powerbi-single-file-build]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -213,10 +216,24 @@ jobs:
               print('VALIDATED POLISHED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line, '; planner ADI blanks', sum(r[11] is None for r in planner_rows))
           PY
 
+      - name: Commit generated Power BI portfolio template
+        run: |
+          mkdir -p powerbi
+          cp build/Walmart_M5_Demand_Planning.pbit powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit
+          if git diff --cached --quiet; then
+            echo "Power BI template already up to date."
+          else
+            git commit -m "Add generated Power BI portfolio template [skip ci]"
+            git push origin HEAD:powerbi-single-file-build
+          fi
+
       - name: Upload single Power BI file
         uses: actions/upload-artifact@v4
         with:
           name: Walmart_M5_Demand_Planning_PBIT
           path: build/Walmart_M5_Demand_Planning.pbit
-          retention-days: 2
+          retention-days: 90
           if-no-files-found: error
