@@ -14,12 +14,12 @@ Forecast the next 28 days of unit demand for the highest-value item-store combin
 For the reported holdout result, priority series are ranked using only data available before the holdout. Lag and rolling features are shifted so the target day is never included in its own predictors. Price preparation uses forward-fill only; pre-launch missing prices are encoded as unavailable (`0`) instead of being backfilled from future weeks.
 
 ## Holdout performance
-- WAPE: 45.14%
+- WAPE: 45.15%
 - MAE: 2.51 units/day-series
-- RMSE: 4.30
-- Bias: -0.86%
+- RMSE: 4.27
+- Bias: -0.21%
 
-Compared with the 28-day moving-average challenger (49.46% WAPE), the model improved WAPE by 8.7% on the priority holdout.
+Compared with the 28-day moving-average challenger (49.46% WAPE), the model improved WAPE by 8.71% on the priority holdout.
 
 ## Most influential feature groups
 The fitted model is dominated by recent demand level and recency signals, particularly 7-day and 28-day rolling demand, followed by lagged demand, item identity, weekday, variability, and price.
