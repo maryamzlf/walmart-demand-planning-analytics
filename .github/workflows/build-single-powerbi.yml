@@ -3,7 +3,18 @@ name: build-single-powerbi
 on:
   push:
     branches: [final-audit-fixes]
+    paths:
+      - 'requirements.txt'
+      - 'config.yaml'
+      - 'src/**'
+      - 'powerbi/**'
+      - 'tools/**'
+      - '.github/workflows/build-single-powerbi.yml'
   workflow_dispatch:
+
+concurrency:
+  group: powerbi-build-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -214,6 +225,111 @@ jobs:
               assert max_m_line < 32766, max_m_line
               assert planner_rows is not None
               print('VALIDATED POLISHED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line, '; planner ADI blanks', sum(r[11] is None for r in planner_rows))
+          PY
+
+      - name: Audit embedded Power BI values against rebuilt sources
+        run: |
+          python - <<'PY'
+          import base64, json, math, re, zipfile, zlib
+          from pathlib import Path
+          import pandas as pd
+
+          p = Path('build/Walmart_M5_Demand_Planning.pbit')
+          hold_src = pd.read_csv('outputs/priority_model_holdout.csv')
+          fi_src = pd.read_csv('outputs/priority_feature_importance.csv')
+          planner_src = pd.read_csv('data/processed/planner_action_center.csv')
+
+          with zipfile.ZipFile(p) as z:
+              names = z.namelist()
+              dms = next(n for n in names if n.replace('\\','/').lstrip('/').endswith('DataModelSchema'))
+              raw_schema = z.read(dms)
+              schema = None
+              for enc in ('utf-16-le','utf-8-sig','utf-8'):
+                  try:
+                      schema = json.loads(raw_schema.decode(enc))
+                      break
+                  except Exception:
+                      pass
+              assert schema is not None
+              tables = {t['name']: t for t in schema['model']['tables']}
+
+              def decode_source(table_name):
+                  part = tables[table_name]['partitions'][0]
+                  expr = part['source']['expression']
+                  text = '\n'.join(expr) if isinstance(expr, list) else expr
+                  m = re.search(r'type table \[(.*?)\]\),', text)
+                  assert m, table_name
+                  cols = [x.split('=')[0].strip().strip('#"') for x in m.group(1).split(',')]
+                  prefix = text.split('}),\n    Raw =')[0]
+                  chunks = re.findall(r'"([A-Za-z0-9+/=]{20,})"', prefix)
+                  rows = json.loads(zlib.decompress(base64.b64decode(''.join(chunks)), -15))
+                  return pd.DataFrame(rows, columns=cols), text
+
+              hold, _ = decode_source('PriorityModelHoldout')
+              for c in ['wape','mae','rmse','bias_pct']:
+                  hold[c] = pd.to_numeric(hold[c])
+              hold = hold.sort_values('model').reset_index(drop=True)
+              hold_src = hold_src.sort_values('model').reset_index(drop=True)
+              assert hold['model'].tolist() == hold_src['model'].tolist()
+              for c in ['wape','mae','rmse','bias_pct']:
+                  assert (hold[c] - hold_src[c]).abs().max() < 1e-10, (c, hold[c], hold_src[c])
+
+              fi, _ = decode_source('FeatureImportance')
+              fi['importance_gain'] = pd.to_numeric(fi['importance_gain'])
+              fi['share'] = pd.to_numeric(fi['share'])
+              fi = fi.sort_values('feature').reset_index(drop=True)
+              fi_src = fi_src.sort_values('feature').reset_index(drop=True)
+              assert fi['feature'].tolist() == fi_src['feature'].tolist()
+              assert (fi['importance_gain'] - fi_src['importance_gain']).abs().max() < 1e-6
+              assert (fi['share'] - fi_src['share']).abs().max() < 1e-12
+
+              pac, _ = decode_source('PlannerActionCenter')
+              numeric = [
+                  'units_365d','revenue_365d','prior_28d_units','forecast_28d_units',
+                  'planning_change_signal_pct','demand_risk_score','safety_stock_scenario_units',
+                  'reorder_point_scenario_units','target_stock_scenario_units'
+              ]
+              for c in numeric:
+                  pac[c] = pd.to_numeric(pac[c])
+              assert len(pac) == 30490
+              assert math.isclose(pac.forecast_28d_units.sum(), 1242423.1, abs_tol=0.1)
+              assert pac.prior_28d_units.sum() == 1231764
+              assert math.isclose(pac.revenue_365d.sum(), 45163441.21, abs_tol=0.01)
+              assert pac.units_365d.sum() == 14585821
+              assert int((pac.demand_risk_score >= 70).sum()) == 3876
+              assert int((pac.planning_change_signal_pct >= 20).sum()) == 5028
+              assert int((pac.planning_change_signal_pct <= -20).sum()) == 4358
+              assert pac.forecast_model_route.value_counts().to_dict() == {
+                  'MA28': 26150, 'LightGBM': 3000, 'WeekdayAvg8': 1340
+              }
+              assert math.isclose(pac.demand_risk_score.mean(), 56.29332896031486, abs_tol=1e-9)
+              assert math.isclose(
+                  pac.loc[pac.demand_risk_score >= 70, 'revenue_365d'].sum() / pac.revenue_365d.sum(),
+                  0.16627137987743248, abs_tol=1e-12
+              )
+              assert math.isclose(
+                  pac.loc[pac.abc_class == 'A', 'revenue_365d'].sum() / pac.revenue_365d.sum(),
+                  0.799987321648115, abs_tol=1e-12
+              )
+
+              light = hold_src.loc[hold_src.model == 'LightGBM'].iloc[0]
+              ma28 = hold_src.loc[hold_src.model == 'MA28'].iloc[0]
+              improvement = (ma28.wape - light.wape) / ma28.wape
+              assert round(light.wape * 100, 1) == 45.2
+              assert round(improvement * 100, 1) == 8.7
+              assert round(light.bias_pct * 100, 1) == -0.2
+
+              measures = {m['name']: m for m in tables['PlannerActionCenter'].get('measures', [])}
+              for name, baseline_ref in [
+                  ('Scenario Safety Stock Units', 'Baseline Safety Stock'),
+                  ('Scenario Reorder Point Units', 'Baseline Reorder Point'),
+                  ('Scenario Target Stock Units', 'Baseline Target Stock'),
+              ]:
+                  expr = '\n'.join(measures[name].get('expression', []))
+                  assert 'UseBaseline' in expr, (name, expr)
+                  assert baseline_ref in expr, (name, expr)
+
+          print('AUDIT PASS: embedded tables, KPI totals, model metrics, routes, and default scenario reconciliation are aligned.')
           PY
 
       - name: Commit generated Power BI portfolio template
