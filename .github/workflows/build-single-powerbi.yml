@@ -286,8 +286,8 @@ jobs:
               pac, _ = decode_source('PlannerActionCenter')
               numeric = [
                   'units_365d','revenue_365d','prior_28d_units','forecast_28d_units',
-                  'planning_change_signal_pct','demand_risk_score','safety_stock_scenario_units',
-                  'reorder_point_scenario_units','target_stock_scenario_units'
+                  'planning_change_signal_pct','demand_risk_score','avg_daily_forecast','demand_sigma_90d',
+                  'safety_stock_scenario_units','reorder_point_scenario_units','target_stock_scenario_units'
               ]
               for c in numeric:
                   pac[c] = pd.to_numeric(pac[c])
