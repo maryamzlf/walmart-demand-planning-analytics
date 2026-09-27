@@ -114,10 +114,10 @@ SUMX(
     VAR ClassZ =
         SWITCH(
             PlannerActionCenter[abc_class],
-            "A", 1.645,
-            "B", 1.282,
-            "C", 1.036,
-            1.282
+            "A", 1.6448536269514722,
+            "B", 1.2815515655446004,
+            "C", 1.0364333894937898,
+            1.2815515655446004
         )
     VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
     RETURN ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
