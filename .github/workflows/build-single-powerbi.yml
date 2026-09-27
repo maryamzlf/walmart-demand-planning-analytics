@@ -1,8 +1,6 @@
 name: build-single-powerbi
 
 on:
-  push:
-    branches: [powerbi-single-file-build]
   workflow_dispatch:
 
 permissions:
@@ -227,7 +225,7 @@ jobs:
             echo "Power BI template already up to date."
           else
             git commit -m "Add generated Power BI portfolio template [skip ci]"
-            git push origin HEAD:powerbi-single-file-build
+            git push origin HEAD:${GITHUB_REF_NAME}
           fi
 
       - name: Upload single Power BI file
