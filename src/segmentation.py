@@ -43,7 +43,9 @@ def build_segmentation(raw_dir="data/raw", output_path="data/processed/segmentat
     price_recent = prices[prices.wm_yr_wk.isin(unique_weeks)]
     pivot = price_recent.pivot_table(index=["item_id", "store_id"], columns="wm_yr_wk", values="sell_price", aggfunc="last")
     item_store = pd.MultiIndex.from_frame(sales[["item_id", "store_id"]])
-    pivot = pivot.reindex(index=item_store, columns=unique_weeks).ffill(axis=1).bfill(axis=1)
+    # Forward-fill only. Backfilling from later weeks would leak a future price
+    # into pre-launch history; missing initial prices are treated as unavailable.
+    pivot = pivot.reindex(index=item_store, columns=unique_weeks).ffill(axis=1).fillna(0.0)
     price_matrix = pivot.to_numpy(dtype=np.float32)
     revenue = (weekly_units * price_matrix).sum(axis=1)
 
