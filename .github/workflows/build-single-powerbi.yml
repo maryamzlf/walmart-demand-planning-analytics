@@ -176,6 +176,7 @@ jobs:
         run: |
           python - <<'PY'
           import base64, json, re, zipfile, zlib
+          import pandas as pd
           from pathlib import Path
 
           p = Path('build/Walmart_M5_Demand_Planning.pbit')
