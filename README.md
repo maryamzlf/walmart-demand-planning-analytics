@@ -1,8 +1,26 @@
-# Walmart Demand Planning Analytics
+# Walmart M5 Demand Planning Analytics
 
-**End-to-end retail demand forecasting, merchandise prioritization, and scenario-based replenishment analytics using Python, SQL, LightGBM, and Power BI-ready outputs.**
+**End-to-end retail demand forecasting, merchandise prioritization, replenishment scenarios, and Power BI decision support using Python, SQL, LightGBM, and the public Walmart M5 dataset.**
 
-This project was built as a planning workflow, not as a generic Kaggle notebook. It combines demand-pattern segmentation, value prioritization, time-based forecast validation, machine-learning model routing, and planner-facing actions at the **item × store** level.
+This portfolio project is designed as a **planning workflow**, not as a generic Kaggle notebook. It moves from raw M5 data through audit, demand segmentation, time-based forecast validation, value-aware model routing, planner actions, inventory scenarios, and a finished five-page Power BI report at the **item × store** level.
+
+## Power BI portfolio report
+
+The final report is available as a self-contained Power BI template:
+
+**[Download the Power BI portfolio template](powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)**
+
+Open the `.pbit` in Power BI Desktop, then use **Save As** if you want a local `.pbix` copy. The portfolio template contains the embedded analytical outputs required to review the report without configuring local CSV paths.
+
+The report contains five decision-oriented pages:
+
+1. **Executive Planning Overview** — 28-day demand outlook, risk, state/department views, ABC-XYZ mix, and priority queue.
+2. **Demand Forecast & Model Performance** — model WAPE, forecast bias, rolling baseline comparison, top forecast drivers, and weekly routed forecast.
+3. **Merchandise & Assortment Planning** — revenue, units, ABC/XYZ mix, category outlook, and high-priority merchandise.
+4. **Planner Action Center** — ranked item-store actions using value, volatility, demand movement, and risk.
+5. **Scenario Planning** — lead-time, review-period, and service-level what-if analysis for safety stock, reorder point, and target stock.
+
+![Power BI dashboard gallery](assets/powerbi_dashboard_gallery.svg)
 
 ## Business questions
 
@@ -11,6 +29,19 @@ This project was built as a planning workflow, not as a generic Kaggle notebook.
 - Which demand patterns need different forecasting methods?
 - Where is demand accelerating or declining?
 - What safety-stock / reorder-point coverage would be reasonable under explicit lead-time and service-level assumptions?
+
+## Portfolio highlights
+
+| Area | Result |
+|---|---:|
+| Item-store series | 30,490 |
+| Observed daily records | 59.2M |
+| 28-day routed forecast | ~1.24M units |
+| Priority LightGBM WAPE | **45.14%** |
+| Relative WAPE improvement vs MA28 | **8.74%** |
+| A-class trailing revenue share | **80.0%** |
+| High-risk item-store records | **3,876** |
+| Power BI report pages | **5** |
 
 ## Why this project is different
 
@@ -38,7 +69,7 @@ flowchart LR
     H --> I
     I --> J[Scenario safety stock / reorder point]
     J --> K[Planner Action Center]
-    K --> L[Power BI-ready outputs]
+    K --> L[Power BI report]
 ```
 
 ## Dataset audit
@@ -58,7 +89,7 @@ flowchart LR
 
 The public M5 data includes unit sales, weekly sell prices, calendar events, and SNAP indicators. It does **not** include Walmart on-hand inventory, purchase orders, vendor lead times, or actual replenishment decisions.
 
-A final QA pass also verified that the validation file is an exact prefix of the evaluation history for all **30,490 series × 1,913 validation days**, so the evaluation file is safely used as the canonical observed sales source.
+A final QA pass verified that the validation file is an exact prefix of the evaluation history for all **30,490 series × 1,913 validation days**, so the evaluation file is safely used as the canonical observed sales source.
 
 ## Demand segmentation
 
@@ -77,7 +108,7 @@ The project also applies **ABC revenue segmentation** and **XYZ weekly-demand va
 
 All forecasting tests use time-based holdouts. Statistical challengers are evaluated across three rolling 28-day folds.
 
-For the leakage-safe priority-series holdout, LightGBM delivered:
+For the leakage-safe priority-series holdout:
 
 | Model | WAPE | RMSE | Bias |
 |---|---:|---:|---:|
@@ -86,7 +117,7 @@ For the leakage-safe priority-series holdout, LightGBM delivered:
 | 8-week weekday average | 49.53% | 4.78 | -1.07% |
 | 7-day seasonal naive | 56.75% | 5.44 | -6.12% |
 
-**Result:** the priority LightGBM challenger reduced WAPE by **8.7% relative to the 28-day moving-average baseline**.
+**Result:** the priority LightGBM challenger reduced WAPE by **8.74% relative to the 28-day moving-average baseline**.
 
 The ML feature set includes recent demand lags, rolling demand level/volatility, weekly sell price, price change, weekday/month, event flags, state SNAP indicators, and product/store hierarchy identifiers.
 
@@ -94,25 +125,15 @@ Price preparation is leakage-safe: prices are **forward-filled only** and initia
 
 ## Planner Action Center
 
-The final item-store output translates the forecast into business-facing fields:
+The final item-store output translates the forecast into business-facing fields including ABC-XYZ class, demand pattern, trailing revenue, forecast movement, planning-change signal, risk score, scenario stock levels, forecast route, and a planner action recommendation.
 
-- ABC-XYZ class and demand pattern
-- trailing revenue and recent demand
-- next-28-day forecast and forecast-vs-prior change
-- recent 28-day run-rate change
-- **planning change signal** used for prioritization
-- demand-risk score
-- service-level, safety-stock, reorder-point, and target-stock scenarios
-- planner action recommendation
-- forecast model route
+The **planning change signal** is deliberately separate from forecast accuracy. When an MA28 route mechanically reproduces the latest 28-day total, the action layer falls back to recent run-rate movement. A symmetric zero-baseline fallback keeps new-demand and drop-to-zero cases finite rather than silently turning them into missing values.
 
-The planning change signal is deliberately separate from forecast accuracy. When a 28-day moving-average route mechanically reproduces the latest 28-day total, the action layer falls back to recent run-rate movement. A symmetric zero-baseline fallback keeps new-demand and drop-to-zero cases finite instead of silently turning them into missing values.
-
-The final 28-day planning horizon totals about **1.242 million forecast units** versus **1.232 million units** in the prior 28 days, roughly **+0.9%** at the aggregate level. This is a planning output, not an out-of-sample accuracy claim.
+The final 28-day planning horizon totals about **1.24 million forecast units** versus **1.23 million units** in the prior 28 days, roughly **+0.9%** at the aggregate level. This is a planning output, not an out-of-sample accuracy claim.
 
 ## Inventory-scenario integrity
 
-M5 does not contain observed inventory. To avoid overstating what the public data can support, the project treats inventory metrics as explicit scenarios:
+M5 does not contain observed inventory. To avoid overstating what the public data can support, inventory outputs are explicit scenarios:
 
 - lead time: 14 days
 - review period: 7 days
@@ -127,26 +148,25 @@ These calculations are decision-support outputs, **not actual Walmart stock or o
 
 Before the Power BI build, the full project was rerun from the raw M5 ZIP through audit, segmentation, rolling backtests, leakage-safe ML holdout, final model routing, planner scenarios, and Power BI-ready output generation. Code-quality checks include syntax validation and **9 regression/unit tests**.
 
-See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage QA report and the issues corrected during the final review.
+See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage QA report and the issues corrected during final review.
 
 ## Repository structure
 
 ```text
 .
-├── .github/workflows/quality.yml
+├── .github/workflows/
+├── assets/
+│   └── powerbi_dashboard_gallery.svg
 ├── data/README.md
 ├── docs/
-│   ├── methodology.md
-│   ├── model_card.md
-│   ├── data_dictionary.md
-│   ├── dashboard_spec.md
-│   └── validation_report.md
 ├── outputs/
+├── powerbi/
+│   ├── README.md
+│   └── Walmart_M5_Demand_Planning_Portfolio.pbit
 ├── sql/planner_kpis.sql
 ├── src/
 ├── tests/
-│   ├── test_planning_logic.py
-│   └── test_forecast_utils.py
+├── tools/
 ├── config.yaml
 └── requirements.txt
 ```
@@ -160,11 +180,7 @@ See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage
 5. Reproduce the leakage-safe priority-model holdout: `python src/priority_model.py`
 6. Generate the final routed forecast and Power BI-ready planner tables: `python src/final_forecast.py`
 
-The scripts also regenerate the portfolio evidence files under `outputs/`, including baseline summaries, priority-model metrics, feature importance, segment summaries, and the planner-action sample. The larger `data/processed/` tables are intentionally excluded from Git and can be regenerated from the public source data.
-
-## Power BI design
-
-The planned report contains five decision-oriented pages: Executive Planning Overview; Demand Forecast & Model Performance; Merchandise & Assortment Planning; Planner Action Center; and Scenario Planning. See [`docs/dashboard_spec.md`](docs/dashboard_spec.md).
+The larger `data/processed/` tables are intentionally excluded from Git and can be regenerated from the public source data. The repository also includes the Power BI build tooling used to compile the portfolio `.pbit` from validated outputs.
 
 ## Tools demonstrated
 
@@ -172,8 +188,8 @@ The planned report contains five decision-oriented pages: Executive Planning Ove
 **Forecasting:** rolling-origin validation, intermittent-demand benchmarking, global ML forecasting  
 **Planning:** ABC-XYZ, ADI/CV² segmentation, service-level scenarios, safety stock / reorder point  
 **SQL:** planner KPI and action-queue queries  
-**BI:** Power BI-ready data model and dashboard specification  
-**Engineering:** reproducible scripts, regression tests, GitHub Actions code-quality check
+**Power BI:** semantic model, DAX measures, interactive filters, scenario controls, executive dashboard design  
+**Engineering:** reproducible scripts, regression tests, GitHub Actions, automated Power BI template build
 
 ## Notes on responsible interpretation
 
