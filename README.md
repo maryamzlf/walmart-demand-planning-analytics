@@ -6,11 +6,15 @@ This portfolio project is designed as a **planning workflow**, not as a generic 
 
 ## Power BI portfolio report
 
-The final report is available as a self-contained Power BI template:
+The final Power BI report is available as a ready-to-open `.pbix` file:
 
-**[Download the Power BI portfolio template](powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)**
+**[Download the final Power BI report (.pbix)](powerbi/Walmart_M5_Demand_Planning_Portfolio.pbix)**
 
-Open the `.pbit` in Power BI Desktop, then use **Save As** if you want a local `.pbix` copy. The portfolio template contains the embedded analytical outputs required to review the report without configuring local CSV paths.
+A reusable template version is also available:
+
+[Download the Power BI template (.pbit)](powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)
+
+The `.pbix` is the primary portfolio file and contains the finished five-page report.
 
 The report contains five decision-oriented pages:
 
@@ -177,6 +181,7 @@ See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage
 ├── outputs/
 ├── powerbi/
 │   ├── README.md
+│   ├── Walmart_M5_Demand_Planning_Portfolio.pbix
 │   └── Walmart_M5_Demand_Planning_Portfolio.pbit
 ├── sql/planner_kpis.sql
 ├── src/
