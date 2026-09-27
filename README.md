@@ -20,7 +20,22 @@ The report contains five decision-oriented pages:
 4. **Planner Action Center** — ranked item-store actions using value, volatility, demand movement, and risk.
 5. **Scenario Planning** — lead-time, review-period, and service-level what-if analysis for safety stock, reorder point, and target stock.
 
-![Power BI dashboard gallery](assets/powerbi_dashboard_gallery.svg)
+### Dashboard preview
+
+#### 1. Executive Planning Overview
+![Executive Planning Overview](assets/dashboard_01_executive.webp)
+
+#### 2. Demand Forecast & Model Performance
+![Demand Forecast & Model Performance](assets/dashboard_02_model_performance.webp)
+
+#### 3. Merchandise & Assortment Planning
+![Merchandise & Assortment Planning](assets/dashboard_03_merchandise.webp)
+
+#### 4. Planner Action Center
+![Planner Action Center](assets/dashboard_04_action_center.webp)
+
+#### 5. Scenario Planning
+![Scenario Planning](assets/dashboard_05_scenario.webp)
 
 ## Business questions
 
@@ -156,7 +171,7 @@ See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage
 .
 ├── .github/workflows/
 ├── assets/
-│   └── powerbi_dashboard_gallery.svg
+│   ├── dashboard_01_executive.webp\n│   ├── dashboard_02_model_performance.webp\n│   ├── dashboard_03_merchandise.webp\n│   ├── dashboard_04_action_center.webp\n│   └── dashboard_05_scenario.webp
 ├── data/README.md
 ├── docs/
 ├── outputs/
