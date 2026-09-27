@@ -6,7 +6,7 @@ SELECT
     SUM(prior_28d_units) AS prior_units_28d,
     100.0 * (SUM(forecast_28d_units) - SUM(prior_28d_units)) / NULLIF(SUM(prior_28d_units), 0) AS forecast_growth_pct,
     SUM(CASE WHEN abc_class = 'A' THEN revenue_365d ELSE 0 END) / NULLIF(SUM(revenue_365d), 0) AS a_class_revenue_share,
-    SUM(CASE WHEN demand_risk_score >= 75 THEN 1 ELSE 0 END) AS high_risk_item_store_count
+    SUM(CASE WHEN demand_risk_score >= 70 THEN 1 ELSE 0 END) AS high_risk_item_store_count
 FROM planner_action_center;
 
 -- Department planning view
