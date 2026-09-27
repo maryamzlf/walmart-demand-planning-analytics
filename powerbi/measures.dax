@@ -109,18 +109,22 @@ VAR LeadTime = [Scenario Lead Time Days]
 VAR ScenarioLabel = [Scenario Service Label]
 VAR OverrideZ = [Scenario Z Override]
 RETURN
-SUMX(
-    PlannerActionCenter,
-    VAR ClassZ =
-        SWITCH(
-            PlannerActionCenter[abc_class],
-            "A", 1.6448536269514722,
-            "B", 1.2815515655446004,
-            "C", 1.0364333894937898,
-            1.2815515655446004
-        )
-    VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
-    RETURN ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
+IF(
+    LeadTime = 14 && ScenarioLabel = "ABC default",
+    SUM(PlannerActionCenter[safety_stock_scenario_units]),
+    SUMX(
+        PlannerActionCenter,
+        VAR ClassZ =
+            SWITCH(
+                PlannerActionCenter[abc_class],
+                "A", 1.6448536269514722,
+                "B", 1.2815515655446004,
+                "C", 1.0364333894937898,
+                1.2815515655446004
+            )
+        VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
+        RETURN ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
+    )
 )
 
 Scenario Reorder Point Units =
@@ -128,19 +132,23 @@ VAR LeadTime = [Scenario Lead Time Days]
 VAR ScenarioLabel = [Scenario Service Label]
 VAR OverrideZ = [Scenario Z Override]
 RETURN
-SUMX(
-    PlannerActionCenter,
-    VAR ClassZ =
-        SWITCH(
-            PlannerActionCenter[abc_class],
-            "A", 1.645,
-            "B", 1.282,
-            "C", 1.036,
-            1.282
-        )
-    VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
-    VAR Safety = ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
-    RETURN PlannerActionCenter[avg_daily_forecast] * LeadTime + Safety
+IF(
+    LeadTime = 14 && ScenarioLabel = "ABC default",
+    SUM(PlannerActionCenter[reorder_point_scenario_units]),
+    SUMX(
+        PlannerActionCenter,
+        VAR ClassZ =
+            SWITCH(
+                PlannerActionCenter[abc_class],
+                "A", 1.6448536269514722,
+                "B", 1.2815515655446004,
+                "C", 1.0364333894937898,
+                1.2815515655446004
+            )
+        VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
+        VAR Safety = ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
+        RETURN PlannerActionCenter[avg_daily_forecast] * LeadTime + Safety
+    )
 )
 
 Scenario Target Stock Units =
@@ -149,19 +157,23 @@ VAR ReviewDays = [Scenario Review Period Days]
 VAR ScenarioLabel = [Scenario Service Label]
 VAR OverrideZ = [Scenario Z Override]
 RETURN
-SUMX(
-    PlannerActionCenter,
-    VAR ClassZ =
-        SWITCH(
-            PlannerActionCenter[abc_class],
-            "A", 1.645,
-            "B", 1.282,
-            "C", 1.036,
-            1.282
-        )
-    VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
-    VAR Safety = ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
-    RETURN PlannerActionCenter[avg_daily_forecast] * (LeadTime + ReviewDays) + Safety
+IF(
+    LeadTime = 14 && ReviewDays = 7 && ScenarioLabel = "ABC default",
+    SUM(PlannerActionCenter[target_stock_scenario_units]),
+    SUMX(
+        PlannerActionCenter,
+        VAR ClassZ =
+            SWITCH(
+                PlannerActionCenter[abc_class],
+                "A", 1.6448536269514722,
+                "B", 1.2815515655446004,
+                "C", 1.0364333894937898,
+                1.2815515655446004
+            )
+        VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
+        VAR Safety = ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
+        RETURN PlannerActionCenter[avg_daily_forecast] * (LeadTime + ReviewDays) + Safety
+    )
 )
 
 Scenario Safety Stock Delta =
@@ -169,3 +181,9 @@ Scenario Safety Stock Delta =
 
 Scenario Target Stock Delta =
 [Scenario Target Stock Units] - SUM(PlannerActionCenter[target_stock_scenario_units])
+
+Scenario Target Stock Delta % =
+DIVIDE(
+    [Scenario Target Stock Delta],
+    SUM(PlannerActionCenter[target_stock_scenario_units])
+)
