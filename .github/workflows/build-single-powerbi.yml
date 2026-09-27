@@ -1,6 +1,8 @@
 name: build-single-powerbi
 
 on:
+  push:
+    branches: [final-audit-fixes]
   workflow_dispatch:
 
 permissions:
@@ -17,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.16'
           cache: pip
 
       - name: Install analytics dependencies
