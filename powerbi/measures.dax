@@ -108,49 +108,39 @@ Scenario Safety Stock Units =
 VAR LeadTime = [Scenario Lead Time Days]
 VAR ScenarioLabel = [Scenario Service Label]
 VAR OverrideZ = [Scenario Z Override]
-VAR UseBaseline = LeadTime = 14 && ScenarioLabel = "ABC default"
 RETURN
-IF(
-    UseBaseline,
-    SUM(PlannerActionCenter[safety_stock_scenario_units]),
-    SUMX(
-        PlannerActionCenter,
-        VAR ClassZ =
-            SWITCH(
-                PlannerActionCenter[abc_class],
-                "A", 1.645,
-                "B", 1.282,
-                "C", 1.036,
-                1.282
-            )
-        VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
-        RETURN ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
-    )
+SUMX(
+    PlannerActionCenter,
+    VAR ClassZ =
+        SWITCH(
+            PlannerActionCenter[abc_class],
+            "A", 1.645,
+            "B", 1.282,
+            "C", 1.036,
+            1.282
+        )
+    VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
+    RETURN ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
 )
 
 Scenario Reorder Point Units =
 VAR LeadTime = [Scenario Lead Time Days]
 VAR ScenarioLabel = [Scenario Service Label]
 VAR OverrideZ = [Scenario Z Override]
-VAR UseBaseline = LeadTime = 14 && ScenarioLabel = "ABC default"
 RETURN
-IF(
-    UseBaseline,
-    SUM(PlannerActionCenter[reorder_point_scenario_units]),
-    SUMX(
-        PlannerActionCenter,
-        VAR ClassZ =
-            SWITCH(
-                PlannerActionCenter[abc_class],
-                "A", 1.645,
-                "B", 1.282,
-                "C", 1.036,
-                1.282
-            )
-        VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
-        VAR Safety = ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
-        RETURN PlannerActionCenter[avg_daily_forecast] * LeadTime + Safety
-    )
+SUMX(
+    PlannerActionCenter,
+    VAR ClassZ =
+        SWITCH(
+            PlannerActionCenter[abc_class],
+            "A", 1.645,
+            "B", 1.282,
+            "C", 1.036,
+            1.282
+        )
+    VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
+    VAR Safety = ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
+    RETURN PlannerActionCenter[avg_daily_forecast] * LeadTime + Safety
 )
 
 Scenario Target Stock Units =
@@ -158,25 +148,20 @@ VAR LeadTime = [Scenario Lead Time Days]
 VAR ReviewDays = [Scenario Review Period Days]
 VAR ScenarioLabel = [Scenario Service Label]
 VAR OverrideZ = [Scenario Z Override]
-VAR UseBaseline = LeadTime = 14 && ReviewDays = 7 && ScenarioLabel = "ABC default"
 RETURN
-IF(
-    UseBaseline,
-    SUM(PlannerActionCenter[target_stock_scenario_units]),
-    SUMX(
-        PlannerActionCenter,
-        VAR ClassZ =
-            SWITCH(
-                PlannerActionCenter[abc_class],
-                "A", 1.645,
-                "B", 1.282,
-                "C", 1.036,
-                1.282
-            )
-        VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
-        VAR Safety = ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
-        RETURN PlannerActionCenter[avg_daily_forecast] * (LeadTime + ReviewDays) + Safety
-    )
+SUMX(
+    PlannerActionCenter,
+    VAR ClassZ =
+        SWITCH(
+            PlannerActionCenter[abc_class],
+            "A", 1.645,
+            "B", 1.282,
+            "C", 1.036,
+            1.282
+        )
+    VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
+    VAR Safety = ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
+    RETURN PlannerActionCenter[avg_daily_forecast] * (LeadTime + ReviewDays) + Safety
 )
 
 Scenario Safety Stock Delta =
