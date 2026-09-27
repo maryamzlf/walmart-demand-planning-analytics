@@ -2,9 +2,9 @@
 
 **End-to-end retail demand forecasting, merchandise prioritization, replenishment scenarios, and Power BI decision support using Python, SQL, LightGBM, and the public Walmart M5 dataset.**
 
-This portfolio project is designed as a **planning workflow**, not as a generic Kaggle notebook. It moves from raw M5 data through audit, demand segmentation, time-based forecast validation, value-aware model routing, planner actions, inventory scenarios, and a finished five-page Power BI report at the **item × store** level.
+The analysis follows a planning workflow from raw M5 data through audit, demand segmentation, time-based forecast validation, value-aware model routing, planner actions, inventory scenarios, and a five-page Power BI report at the **item × store** level.
 
-## Power BI portfolio report
+## Power BI report
 
 The final Power BI report is available as a ready-to-open `.pbix` file:
 
@@ -49,7 +49,7 @@ The report contains five decision-oriented pages:
 - Where is demand accelerating or declining?
 - What safety-stock / reorder-point coverage would be reasonable under explicit lead-time and service-level assumptions?
 
-## Portfolio highlights
+## Key results
 
 | Area | Result |
 |---|---:|
@@ -62,7 +62,7 @@ The report contains five decision-oriented pages:
 | High-risk item-store records | **3,876** |
 | Power BI report pages | **5** |
 
-## Why this project is different
+## Forecast routing rationale
 
 A large share of retail demand is sparse and intermittent, so forcing one forecasting model across every SKU-store combination is inefficient and often inaccurate. This project uses a **value-aware forecast router**:
 
