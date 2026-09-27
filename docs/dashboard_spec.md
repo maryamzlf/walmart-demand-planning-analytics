@@ -1,76 +1,49 @@
-# Power BI Dashboard Specification
+# Power BI Dashboard — Final Implementation
 
-The final report is designed for a merchandise / demand / inventory planning audience rather than as a generic analytics dashboard.
+The final report is implemented for a merchandise / demand / inventory planning audience rather than as a generic analytics dashboard.
 
 ## Power BI-ready sources
+
 - `data/processed/planner_action_center.csv` — one row per item × store
 - `data/processed/forecast_weekly_item_store.csv` — four forecast weeks per item × store
-- `outputs/baseline_model_summary.csv` — baseline backtest comparison
+- `outputs/baseline_model_summary.csv` — rolling baseline comparison
 - `outputs/priority_model_holdout.csv` — priority holdout model comparison
 - `outputs/priority_feature_importance.csv` — LightGBM feature importance
 
 ## Page 1 — Executive Planning Overview
-**KPIs**
-- Forecast Units — Next 28 Days
-- Prior 28-Day Units
-- Forecast Growth %
-- A-Class Revenue Share
-- High-Risk Item-Store Count
-- Priority Forecast WAPE
 
-**Visuals**
-- Forecast vs prior demand by department
-- Forecast by state/store
-- ABC-XYZ matrix
-- Demand-pattern mix
-- Top planner actions table
+**KPIs:** Forecast 28D, Prior 28D, Growth vs Prior, A-Class Revenue Share, High-Risk Item-Store, LightGBM WAPE.
+
+**Visuals:** Forecast vs prior by department, 28-day forecast by state, demand-pattern mix, ABC-XYZ portfolio matrix, and priority planning queue.
 
 ## Page 2 — Demand Forecast & Model Performance
-- Actual vs backtest forecast
-- WAPE / RMSE / Bias by model
-- Error by demand segment
-- Forecast by week for selected item/store
-- Feature importance for priority LightGBM
+
+**KPIs:** LightGBM WAPE, WAPE Improvement, Forecast Bias.
+
+**Visuals:** Priority holdout WAPE by model, rolling baseline WAPE by demand pattern, Top 8 Forecast Drivers, and weekly routed forecast.
 
 ## Page 3 — Merchandise & Assortment Planning
-- Revenue and units by category / department
-- A/B/C contribution
-- X/Y/Z variability
-- High-value growth / decline items
-- Price movement vs unit movement
+
+**KPIs:** Revenue 365D, Units 365D, Item-Store Count, Growth Review, Decline Review.
+
+**Visuals:** Revenue by department, revenue mix by ABC class, item-store mix by XYZ class, 28-day forecast by category, and merchandise priority detail.
 
 ## Page 4 — Planner Action Center
-Table grain: item × store.
 
-Recommended columns:
-- Item
-- Store
-- Department
-- ABC-XYZ
-- Demand segment
-- Prior 28D Units
-- Forecast 28D Units
-- Forecast Growth %
-- Planning Change Signal %
-- Demand Risk Score
-- Scenario Safety Stock
-- Scenario Reorder Point
-- Forecast Model Route
-- Planner Action
+Table grain: **item × store**.
 
-Use `planning_change_signal_pct` for action-oriented conditional formatting because MA28 forecasts are mechanically flat versus the latest 28-day average. Keep `forecast_growth_pct` visible as the literal forecast comparison.
+**KPIs:** High-Risk Item-Store, High-Risk Revenue Share, Growth Review, Decline Review, Average Risk Score.
 
-Conditional formatting should emphasize high-value and high-risk records, not decorate every field.
+**Priority queue fields:** Item, Store, ABC-XYZ, Demand Pattern, Forecast (28D), Planning Change %, Risk Score, Planner Action.
+
+The queue is sorted by **Risk Score descending** so the most consequential records are visible first.
 
 ## Page 5 — Scenario Planning
-Slicers / what-if parameters:
-- Lead time
-- Service level
-- Review period
 
-Outputs:
-- Safety stock scenario
-- Reorder point scenario
-- Target stock scenario
+**Slicers / what-if parameters:** Lead Time (Days), Review Period (Days), Service Level, ABC Class, Department.
 
-A visible note must state that these are scenario calculations because public M5 data does not contain actual on-hand inventory or Walmart replenishment decisions.
+**KPIs:** Baseline Safety Stock, Scenario Safety Stock, Target Stock Change (Units), Scenario Reorder Point, Scenario Target Stock, Target Stock Change %.
+
+**Visuals:** Baseline vs scenario target stock by ABC class, scenario target stock by department, and scenario detail by department / ABC class.
+
+A visible interpretation note should accompany portfolio discussion: these are planning scenarios because public M5 data does not contain actual on-hand inventory or Walmart replenishment decisions.
