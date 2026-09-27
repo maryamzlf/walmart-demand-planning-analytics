@@ -175,7 +175,11 @@ See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage
 .
 ├── .github/workflows/
 ├── assets/
-│   ├── dashboard_01_executive.webp\n│   ├── dashboard_02_model_performance.webp\n│   ├── dashboard_03_merchandise.webp\n│   ├── dashboard_04_action_center.webp\n│   └── dashboard_05_scenario.webp
+│   ├── dashboard_01_executive.webp
+│   ├── dashboard_02_model_performance.webp
+│   ├── dashboard_03_merchandise.webp
+│   ├── dashboard_04_action_center.webp
+│   └── dashboard_05_scenario.webp
 ├── data/README.md
 ├── docs/
 ├── outputs/
