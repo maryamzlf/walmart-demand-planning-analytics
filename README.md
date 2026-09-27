@@ -2,7 +2,7 @@
 
 **End-to-end retail demand forecasting, merchandise prioritization, replenishment scenarios, and Power BI decision support using Python, SQL, LightGBM, and the public Walmart M5 dataset.**
 
-This portfolio project is designed as a **planning workflow**, not as a generic Kaggle notebook. It moves from raw M5 data through audit, demand segmentation, time-based forecast validation, value-aware model routing, planner actions, inventory scenarios, and a finished five-page Power BI report at the **item × store** level.
+The project follows a retail planning workflow from raw M5 data through audit, demand segmentation, time-based validation, model routing, planner actions, inventory scenarios, and a five-page Power BI report at the **item × store** level.
 
 ## Power BI portfolio report
 
@@ -56,13 +56,13 @@ The report contains five decision-oriented pages:
 | Item-store series | 30,490 |
 | Observed daily records | 59.2M |
 | 28-day routed forecast | ~1.24M units |
-| Priority LightGBM WAPE | **45.14%** |
-| Relative WAPE improvement vs MA28 | **8.74%** |
+| Priority LightGBM WAPE | **45.15%** |
+| Relative WAPE improvement vs MA28 | **8.71%** |
 | A-class trailing revenue share | **80.0%** |
 | High-risk item-store records | **3,876** |
 | Power BI report pages | **5** |
 
-## Why this project is different
+## Forecasting approach
 
 A large share of retail demand is sparse and intermittent, so forcing one forecasting model across every SKU-store combination is inefficient and often inaccurate. This project uses a **value-aware forecast router**:
 
@@ -70,7 +70,7 @@ A large share of retail demand is sparse and intermittent, so forcing one foreca
 2. **Remaining Smooth demand** → 8-week weekday average
 3. **Remaining Intermittent / Erratic / Lumpy demand** → 28-day moving average
 
-The model architecture is driven by backtest evidence rather than by model complexity for its own sake.
+Model routing is based on the backtest results: more complex modeling is reserved for high-value series where it adds measurable forecast value.
 
 ## Planning architecture
 
@@ -131,12 +131,12 @@ For the leakage-safe priority-series holdout:
 
 | Model | WAPE | RMSE | Bias |
 |---|---:|---:|---:|
-| **LightGBM** | **45.14%** | **4.30** | **-0.86%** |
+| **LightGBM** | **45.15%** | **4.27** | **-0.21%** |
 | 28-day moving average | 49.46% | 4.86 | -1.25% |
 | 8-week weekday average | 49.53% | 4.78 | -1.07% |
 | 7-day seasonal naive | 56.75% | 5.44 | -6.12% |
 
-**Result:** the priority LightGBM challenger reduced WAPE by **8.74% relative to the 28-day moving-average baseline**.
+**Result:** the priority LightGBM challenger reduced WAPE by **8.71% relative to the 28-day moving-average baseline**.
 
 The ML feature set includes recent demand lags, rolling demand level/volatility, weekly sell price, price change, weekday/month, event flags, state SNAP indicators, and product/store hierarchy identifiers.
 
@@ -175,7 +175,11 @@ See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage
 .
 ├── .github/workflows/
 ├── assets/
-│   ├── dashboard_01_executive.webp\n│   ├── dashboard_02_model_performance.webp\n│   ├── dashboard_03_merchandise.webp\n│   ├── dashboard_04_action_center.webp\n│   └── dashboard_05_scenario.webp
+│   ├── dashboard_01_executive.webp
+│   ├── dashboard_02_model_performance.webp
+│   ├── dashboard_03_merchandise.webp
+│   ├── dashboard_04_action_center.webp
+│   └── dashboard_05_scenario.webp
 ├── data/README.md
 ├── docs/
 ├── outputs/
@@ -200,7 +204,7 @@ See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage
 5. Reproduce the leakage-safe priority-model holdout: `python src/priority_model.py`
 6. Generate the final routed forecast and Power BI-ready planner tables: `python src/final_forecast.py`
 
-The larger `data/processed/` tables are intentionally excluded from Git and can be regenerated from the public source data. The repository also includes the Power BI build tooling used to compile the portfolio `.pbit` from validated outputs.
+The larger `data/processed/` tables are intentionally excluded from Git and can be regenerated from the public source data. Package versions are pinned in `requirements.txt` so the published model metrics can be reproduced. The repository also includes the Power BI build workflow used to compile and validate the portfolio `.pbit`.
 
 ## Tools demonstrated
 
@@ -211,6 +215,6 @@ The larger `data/processed/` tables are intentionally excluded from Git and can 
 **Power BI:** semantic model, DAX measures, interactive filters, scenario controls, executive dashboard design  
 **Engineering:** reproducible scripts, regression tests, GitHub Actions, automated Power BI template build
 
-## Notes on responsible interpretation
+## Scope and limitations
 
 This is an independent portfolio analysis using public competition data. It is not affiliated with Walmart and does not represent current Walmart operations. The dataset ends in 2016; the project demonstrates analytical and planning methodology rather than current business performance.
