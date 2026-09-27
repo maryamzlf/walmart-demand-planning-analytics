@@ -67,12 +67,12 @@ Price handling is explicitly leakage-safe. Weekly prices are forward-filled only
 
 | Model | WAPE | RMSE | Bias |
 |---|---:|---:|---:|
-| LightGBM | 45.14% | 4.30 | -0.86% |
+| LightGBM | 45.15% | 4.27 | -0.21% |
 | 28-day moving average | 49.46% | 4.86 | -1.25% |
 | 8-week weekday average | 49.53% | 4.78 | -1.07% |
 | 7-day seasonal naive | 56.75% | 5.44 | -6.12% |
 
-LightGBM reduced WAPE by **8.7% relative to the 28-day moving-average challenger**.
+LightGBM reduced WAPE by **8.71% relative to the 28-day moving-average challenger**.
 
 ## 7. Forecast routing
 - Top 3,000 priority item-store series: LightGBM
@@ -105,4 +105,4 @@ The scripts regenerate the portfolio evidence files:
 - `priority_model.py` writes holdout metrics and feature importance.
 - `final_forecast.py` writes the Power BI-ready large tables plus `outputs/segment_summary.csv` and `outputs/planner_action_sample.csv`.
 
-Raw and large processed data remain excluded from Git and are regenerated from the public M5 source files.
+Raw and large processed data remain excluded from Git and are regenerated from the public M5 source files. The numerical environment is pinned in `requirements.txt`; the final Power BI build and tracked model-performance outputs use the same package versions.
