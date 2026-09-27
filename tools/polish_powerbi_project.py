@@ -316,6 +316,92 @@ def polish_m_queries():
         p.write_text(text, encoding='utf-8')
 
 
+
+def align_scenario_default_baseline():
+    """Keep the unfiltered/default scenario numerically identical to the stored baseline.
+
+    This avoids a small artificial delta caused by rounded exported planner fields.
+    Non-default what-if selections are still recalculated dynamically.
+    """
+    mdir = ROOT / 'Model' / 'tables' / 'PlannerActionCenter' / 'measures'
+    dax = {
+        'Scenario Safety Stock Units.dax': '''VAR LeadTime = [Scenario Lead Time Days]
+VAR ScenarioLabel = [Scenario Service Label]
+VAR OverrideZ = [Scenario Z Override]
+RETURN
+IF (
+    LeadTime = 14 && ScenarioLabel = "ABC default",
+    [Baseline Safety Stock Units],
+    SUMX (
+        PlannerActionCenter,
+        VAR ClassZ =
+            SWITCH (
+                'PlannerActionCenter'[ABC Class],
+                "A", 1.6448536269514722,
+                "B", 1.2815515655446004,
+                "C", 1.0364333894937898,
+                1.2815515655446004
+            )
+        VAR ZValue = IF ( ScenarioLabel = "ABC default", ClassZ, OverrideZ )
+        RETURN ZValue * 'PlannerActionCenter'[Demand Sigma 90D] * SQRT ( LeadTime )
+    )
+)
+''',
+        'Scenario Reorder Point Units.dax': '''VAR LeadTime = [Scenario Lead Time Days]
+VAR ScenarioLabel = [Scenario Service Label]
+VAR OverrideZ = [Scenario Z Override]
+RETURN
+IF (
+    LeadTime = 14 && ScenarioLabel = "ABC default",
+    [Baseline Reorder Point Units],
+    SUMX (
+        PlannerActionCenter,
+        VAR ClassZ =
+            SWITCH (
+                'PlannerActionCenter'[ABC Class],
+                "A", 1.6448536269514722,
+                "B", 1.2815515655446004,
+                "C", 1.0364333894937898,
+                1.2815515655446004
+            )
+        VAR ZValue = IF ( ScenarioLabel = "ABC default", ClassZ, OverrideZ )
+        VAR Safety = ZValue * 'PlannerActionCenter'[Demand Sigma 90D] * SQRT ( LeadTime )
+        RETURN 'PlannerActionCenter'[Avg Daily Forecast] * LeadTime + Safety
+    )
+)
+''',
+        'Scenario Target Stock Units.dax': '''VAR LeadTime = [Scenario Lead Time Days]
+VAR ReviewDays = [Scenario Review Period Days]
+VAR ScenarioLabel = [Scenario Service Label]
+VAR OverrideZ = [Scenario Z Override]
+RETURN
+IF (
+    LeadTime = 14 && ReviewDays = 7 && ScenarioLabel = "ABC default",
+    [Baseline Target Stock Units],
+    SUMX (
+        PlannerActionCenter,
+        VAR ClassZ =
+            SWITCH (
+                'PlannerActionCenter'[ABC Class],
+                "A", 1.6448536269514722,
+                "B", 1.2815515655446004,
+                "C", 1.0364333894937898,
+                1.2815515655446004
+            )
+        VAR ZValue = IF ( ScenarioLabel = "ABC default", ClassZ, OverrideZ )
+        VAR Safety = ZValue * 'PlannerActionCenter'[Demand Sigma 90D] * SQRT ( LeadTime )
+        RETURN 'PlannerActionCenter'[Avg Daily Forecast] * ( LeadTime + ReviewDays ) + Safety
+    )
+)
+''',
+    }
+    for name, text in dax.items():
+        p = mdir / name
+        if not p.exists():
+            raise FileNotFoundError(p)
+        p.write_text(text, encoding='utf-8')
+
+
 def fix_measure_formats():
     fixes = {
         'Scenario Safety Stock Delta.xml': '#,##0;-#,##0;0',
@@ -361,6 +447,7 @@ def validate():
 
 if __name__ == '__main__':
     rename_semantic_columns()
+    align_scenario_default_baseline()
     polish_report()
     polish_m_queries()
     fix_measure_formats()
