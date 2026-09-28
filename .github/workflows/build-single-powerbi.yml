@@ -425,6 +425,23 @@ jobs:
               ]
               assert merch_order_props[:2] == ['Risk Score', 'Revenue ($, 365D)'], merch_order_props
 
+              action_queue = visual_with_title('Planner Action Center', 'Planner Action Queue')
+              action_refs = [
+                  x.get('queryRef')
+                  for values in action_queue.get('projections', {}).values()
+                  for x in values
+              ]
+              assert action_refs == [
+                  'PlannerActionCenter.Item',
+                  'PlannerActionCenter.Store',
+                  'PlannerActionCenter.ABC-XYZ',
+                  'PlannerActionCenter.Demand Pattern',
+                  'PlannerActionCenter.Forecast (28D)',
+                  'PlannerActionCenter.Planning Change %',
+                  'PlannerActionCenter.Risk Score',
+                  'PlannerActionCenter.Planner Action',
+              ], action_refs
+
               feature_visual = visual_with_title('Demand Forecast & Model Performance', 'Forecast Driver Importance')
               feature_refs = [
                   x.get('queryRef')
