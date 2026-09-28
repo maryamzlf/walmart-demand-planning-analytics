@@ -104,6 +104,9 @@ The compiled Power BI template is validated automatically after every build:
 The page-2 diagnostic tables are intentionally disconnected. Merchandise slicers can change the routed weekly forecast, while fixed holdout/backtest charts remain validation summaries.
 
 ### Presentation corrections made during this audit
+- Renamed the feature-importance visual to **Forecast Driver Importance** because the embedded table contains the full feature set; the previous “Top 8” wording could imply a filter that was not actually applied.
+- Aligned **Merchandise Priority Detail** with the validated dashboard view: nine business-facing columns, sorted by Risk Score descending and trailing revenue second.
+- Added explicit regression checks for the **16.63% high-risk revenue share** and all four weekly forecast totals so displayed KPIs and the line chart are validated against embedded source data.
 - Removed the stale `.pbix` snapshot that no longer matched the validated model.
 - Removed two stale screenshots that contained the old bias/default-scenario values.
 - Made the validated `.pbit` the canonical downloadable report.
