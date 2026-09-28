@@ -75,8 +75,8 @@ def add_planning_scenarios(
     out["forecast_unit_change"] = np.round(forecast_unit_change, 1)
     out["forecast_growth_pct"] = np.round(forecast_growth * 100, 1)
     out["recent_run_rate_change_pct"] = np.round(recent_run_rate_change * 100, 1)
-    out["avg_daily_forecast"] = np.round(avg_daily, 2)
-    out["demand_sigma_90d"] = np.round(sigma90, 4)
+    out["avg_daily_forecast"] = np.round(avg_daily, 6)
+    out["demand_sigma_90d"] = np.round(sigma90, 6)
     out["service_level_scenario"] = out.abc_class.map({"A": "95%", "B": "90%", "C": "85%"})
     out["lead_time_scenario_days"] = lead_time_days
     out["review_period_scenario_days"] = review_period_days
