@@ -88,10 +88,13 @@ jobs:
           assert abs(planner_total - 1242423.1) < 0.2, planner_total
           aggregate_growth = (planner_total - float(planner['prior_28d_units'].sum())) / float(planner['prior_28d_units'].sum())
           assert abs(aggregate_growth - 0.0086535245) < 1e-8, aggregate_growth
-          high_risk = int((planner['demand_risk_score'] >= 70).sum())
+          high_risk_mask = planner['demand_risk_score'] >= 70
+          high_risk = int(high_risk_mask.sum())
+          high_risk_revenue_share = float(planner.loc[high_risk_mask, 'revenue_365d'].sum() / planner['revenue_365d'].sum())
           growth_review = int((planner['planning_change_signal_pct'] >= 20).sum())
           decline_review = int((planner['planning_change_signal_pct'] <= -20).sum())
           assert high_risk == 3876, high_risk
+          assert abs(high_risk_revenue_share - 0.16627137987743248) < 1e-10, high_risk_revenue_share
           assert growth_review == 5028, growth_review
           assert decline_review == 4358, decline_review
           assert abs(float(planner['demand_risk_score'].mean()) - 56.29332896031486) < 1e-9
@@ -118,6 +121,16 @@ jobs:
           abc_revenue = planner.groupby('abc_class')['revenue_365d'].sum() / planner['revenue_365d'].sum()
           assert set(abc_revenue.index) == {'A','B','C'}, abc_revenue
           assert abs(float(abc_revenue['A']) - 0.80) < 0.002, abc_revenue
+          weekly_expected = {
+              '2016-05-23': 304629.23,
+              '2016-05-30': 313010.08,
+              '2016-06-06': 317923.50,
+              '2016-06-13': 306863.57,
+          }
+          weekly_by_date = weekly.groupby(weekly['week_start_date'].astype(str))['forecast_units'].sum().to_dict()
+          assert set(weekly_by_date) == set(weekly_expected), weekly_by_date
+          for week_start, expected_units in weekly_expected.items():
+              assert abs(float(weekly_by_date[week_start]) - expected_units) < 0.02, (week_start, weekly_by_date[week_start])
           weekly_total = float(weekly['forecast_units'].sum())
           planner_total = float(planner['forecast_28d_units'].sum())
           weekly_by_key = weekly.groupby('item_store_key', as_index=True)['forecast_units'].sum()
@@ -126,7 +139,7 @@ jobs:
           assert max_recon <= 0.061, max_recon
           print('Power BI source rows:', len(planner), len(weekly))
           print('Verified source KPIs:', planner_total, planner['revenue_365d'].sum(), abc_revenue.to_dict(), 'weekly max reconciliation', max_recon)
-          print('Planning review counts:', high_risk, growth_review, decline_review, 'avg risk', planner['demand_risk_score'].mean())
+          print('Planning review counts:', high_risk, growth_review, decline_review, 'avg risk', planner['demand_risk_score'].mean(), 'high-risk revenue share', high_risk_revenue_share)
           print('Scenario totals:', planner['safety_stock_scenario_units'].sum(), planner['reorder_point_scenario_units'].sum(), planner['target_stock_scenario_units'].sum())
           print('Priority metrics:', priority[['wape','mae','rmse','bias_pct']].to_dict('index'), 'relative improvement', rel_improvement)
           PY
