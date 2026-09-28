@@ -98,7 +98,7 @@ flowchart LR
 | Total units | 66,927,173 |
 | Zero-demand observations | 68.0% |
 
-The public M5 data includes unit sales, weekly sell prices, calendar events, and SNAP indicators. It does **not** include Walmart on-hand inventory, purchase orders, vendor lead times, or actual replenishment decisions.
+The public M5 data includes unit sales, weekly sell prices, calendar events, and SNAP indicators. It does **not** include Walmart on-hand inventory, purchase orders, vendor lead times, or actual replenishment decisions. Zero-sales days are therefore treated as observed sales outcomes, not inferred stockouts.
 
 A final QA pass verified that the validation file is an exact prefix of the evaluation history for all **30,490 series × 1,913 validation days**, so the evaluation file is safely used as the canonical observed sales source.
 
