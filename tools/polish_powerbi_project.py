@@ -297,7 +297,13 @@ def polish_report():
                 ])
                 sort_table(sv, 'PlannerActionCenter', 'Risk Score', True)
             elif 'Merchandise & Assortment Planning' in page:
-                sort_table(sv, 'PlannerActionCenter', 'Revenue ($, 365D)', True)
+                prune_table(sv, [
+                    'PlannerActionCenter.Item', 'PlannerActionCenter.Store', 'PlannerActionCenter.Department',
+                    'PlannerActionCenter.ABC Class', 'PlannerActionCenter.XYZ Class',
+                    'PlannerActionCenter.Revenue ($, 365D)', 'PlannerActionCenter.Forecast (28D)',
+                    'PlannerActionCenter.Planning Change %', 'PlannerActionCenter.Risk Score'
+                ])
+                sort_table(sv, 'PlannerActionCenter', 'Risk Score', True, secondary=('Revenue ($, 365D)', True))
 
         if vt == 'card' and 'Demand Forecast & Model Performance' in page:
             pos = cfg.get('layouts', [{}])[0].get('position', {})
