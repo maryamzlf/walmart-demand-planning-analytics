@@ -26,7 +26,7 @@ The final report is implemented for a merchandise / demand / inventory planning 
 
 **KPIs:** Revenue 365D, Units 365D, Item-Store Count, Growth Review, Decline Review.
 
-**Visuals:** Revenue by department, revenue mix by ABC class, item-store mix by XYZ class, 28-day forecast by category, and merchandise priority detail.
+**Visuals:** Revenue by department, revenue mix by ABC class, item-store mix by XYZ class, 28-day forecast by category, and merchandise priority detail. The priority table is sorted by Risk Score descending, then trailing revenue.
 
 ## Page 4 — Planner Action Center
 
