@@ -272,7 +272,7 @@ def polish_report():
                 elif 'PlannerActionCenter.ABC Class' in rset and 'PlannerActionCenter.Revenue 365D' in rset: title = 'Revenue Mix by ABC Class'
                 elif 'PlannerActionCenter.XYZ Class' in rset and 'PlannerActionCenter.Item-Store Count' in rset: title = 'Item-Store Mix by XYZ Class'
                 elif 'PlannerActionCenter.Category' in rset and 'PlannerActionCenter.Forecast Units 28D' in rset: title = 'Forecast Units by Category'
-            elif 'Planner Action Center' in page and vt == 'tableEx': title = 'Planner Priority Queue'
+            elif 'Planner Action Center' in page and vt == 'tableEx': title = 'Planner Action Queue'
             elif 'Scenario Planning' in page:
                 if vt == 'clusteredColumnChart': title = 'Baseline vs Scenario Target Stock by ABC Class'
                 elif vt == 'clusteredBarChart': title = 'Scenario Target Stock by Department'
