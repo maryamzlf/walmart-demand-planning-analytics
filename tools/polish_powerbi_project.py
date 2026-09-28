@@ -343,10 +343,10 @@ IF (
         VAR ClassZ =
             SWITCH (
                 'PlannerActionCenter'[ABC Class],
-                "A", 1.6448536269514722,
-                "B", 1.2815515655446004,
-                "C", 1.0364333894937898,
-                1.2815515655446004
+                "A", 1.645,
+                "B", 1.282,
+                "C", 1.036,
+                1.282
             )
         VAR ZValue = IF ( ScenarioLabel = "ABC default", ClassZ, OverrideZ )
         RETURN ZValue * 'PlannerActionCenter'[Demand Sigma 90D] * SQRT ( LeadTime )
@@ -365,10 +365,10 @@ IF (
         VAR ClassZ =
             SWITCH (
                 'PlannerActionCenter'[ABC Class],
-                "A", 1.6448536269514722,
-                "B", 1.2815515655446004,
-                "C", 1.0364333894937898,
-                1.2815515655446004
+                "A", 1.645,
+                "B", 1.282,
+                "C", 1.036,
+                1.282
             )
         VAR ZValue = IF ( ScenarioLabel = "ABC default", ClassZ, OverrideZ )
         VAR Safety = ZValue * 'PlannerActionCenter'[Demand Sigma 90D] * SQRT ( LeadTime )
@@ -389,10 +389,10 @@ IF (
         VAR ClassZ =
             SWITCH (
                 'PlannerActionCenter'[ABC Class],
-                "A", 1.6448536269514722,
-                "B", 1.2815515655446004,
-                "C", 1.0364333894937898,
-                1.2815515655446004
+                "A", 1.645,
+                "B", 1.282,
+                "C", 1.036,
+                1.282
             )
         VAR ZValue = IF ( ScenarioLabel = "ABC default", ClassZ, OverrideZ )
         VAR Safety = ZValue * 'PlannerActionCenter'[Demand Sigma 90D] * SQRT ( LeadTime )
