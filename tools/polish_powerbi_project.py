@@ -264,7 +264,7 @@ def polish_report():
             elif 'Demand Forecast & Model Performance' in page:
                 if 'PriorityModelHoldout.Model WAPE' in rset: title = 'Priority Holdout WAPE by Model'
                 elif 'BaselineModelSummary.Baseline WAPE' in rset: title = 'Rolling Baseline WAPE by Demand Pattern'
-                elif 'FeatureImportance.Feature Importance Share' in rset: title = 'Top 8 Forecast Drivers'
+                elif 'FeatureImportance.Feature Importance Share' in rset: title = 'Forecast Driver Importance'
                 elif 'ForecastWeekly.Weekly Forecast Units' in rset: title = 'Weekly Routed Forecast'
             elif 'Merchandise & Assortment Planning' in page:
                 if vt == 'tableEx': title = 'Merchandise Priority Detail'
