@@ -265,7 +265,9 @@ def polish_report():
                 if 'PriorityModelHoldout.Model WAPE' in rset: title = 'Priority Holdout WAPE by Model'
                 elif 'BaselineModelSummary.Baseline WAPE' in rset: title = 'Rolling Baseline WAPE by Demand Pattern'
                 elif 'FeatureImportance.Feature Importance Share' in rset: title = 'Forecast Driver Importance'
-                elif 'ForecastWeekly.Weekly Forecast Units' in rset: title = 'Weekly Routed Forecast'
+                elif 'ForecastWeekly.Weekly Forecast Units' in rset:
+                    title = 'Weekly Routed Forecast'
+                    sort_table(sv, 'ForecastWeekly', 'Week Start', False)
             elif 'Merchandise & Assortment Planning' in page:
                 if vt == 'tableEx': title = 'Merchandise Priority Detail'
                 elif 'PlannerActionCenter.Revenue 365D' in rset and 'PlannerActionCenter.Department' in rset: title = 'Revenue by Department'
