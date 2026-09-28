@@ -178,13 +178,19 @@ def prune_table(sv, keep_refs):
     pq['Select'] = [x for x in pq.get('Select', []) if x.get('Name') in keep]
 
 
-def sort_table(sv, table, field, descending=True):
+def sort_table(sv, table, field, descending=True, secondary=None):
     pq = sv.setdefault('prototypeQuery', {})
     alias = next((x.get('Name') for x in pq.get('From', []) if x.get('Entity') == table), None)
     if alias:
-        pq['OrderBy'] = [{'Direction': 2 if descending else 1, 'Expression': {
+        order = [{'Direction': 2 if descending else 1, 'Expression': {
             'Column': {'Expression': {'SourceRef': {'Source': alias}}, 'Property': field}
         }}]
+        if secondary:
+            secondary_field, secondary_desc = secondary
+            order.append({'Direction': 2 if secondary_desc else 1, 'Expression': {
+                'Column': {'Expression': {'SourceRef': {'Source': alias}}, 'Property': secondary_field}
+            }})
+        pq['OrderBy'] = order
 
 
 def rebind_card(sv, table, old_measure, new_measure):
@@ -214,9 +220,9 @@ def polish_report():
             card_specs = {
                 'PlannerActionCenter.Forecast Units 28D': ('Forecast 28D', 1000000, 2, 30, 9),
                 'PlannerActionCenter.Prior Units 28D': ('Prior 28D', 1000000, 2, 30, 9),
-                'PlannerActionCenter.Forecast Growth %': ('Forecast Growth', 1, 1, 30, 9),
+                'PlannerActionCenter.Forecast Growth %': ('Growth vs Prior', 1, 1, 30, 9),
                 'PlannerActionCenter.A-Class Revenue Share': ('A-Class Revenue Share', 1, 1, 30, 9),
-                'PlannerActionCenter.High-Risk Item-Store Count': ('High-Risk Count', 1, 0, 30, 9),
+                'PlannerActionCenter.High-Risk Item-Store Count': ('High-Risk Item-Store', 1, 0, 30, 9),
                 'PriorityModelHoldout.Priority LightGBM WAPE': ('LightGBM WAPE', 1, 1, 28, 9),
                 'PriorityModelHoldout.Priority WAPE Improvement %': ('WAPE Improvement', 1, 1, 28, 9),
                 'PriorityModelHoldout.Priority LightGBM Bias %': ('Forecast Bias', 1, 1, 28, 9),
@@ -232,13 +238,13 @@ def polish_report():
                 'PlannerActionCenter.Scenario Safety Stock Delta': ('Safety Stock Δ', 1000, 1, 28, 9),
                 'PlannerActionCenter.Scenario Reorder Point Units': ('Scenario Reorder Point', 1000, 0, 28, 9),
                 'PlannerActionCenter.Scenario Target Stock Units': ('Scenario Target Stock', 1000000, 2, 28, 9),
-                'PlannerActionCenter.Scenario Target Stock Delta %': ('Target Stock Δ %', 1, 1, 28, 9),
+                'PlannerActionCenter.Scenario Target Stock Delta %': ('Target Stock Change %', 1, 1, 28, 9),
             }
             if ref in card_specs:
                 style_card(sv, *card_specs[ref])
             if 'Scenario Planning' in page and ref == 'PlannerActionCenter.Scenario Safety Stock Delta':
                 rebind_card(sv, 'PlannerActionCenter', 'Scenario Safety Stock Delta', 'Scenario Target Stock Delta')
-                style_card(sv, 'Target Stock Δ Units', 1000, 1, 28, 9)
+                style_card(sv, 'Target Stock Change (Units)', 1, 0, 28, 9)
 
         if vt in {'clusteredColumnChart', 'clusteredBarChart', 'lineChart', 'donutChart', 'tableEx'}:
             refs = [x.get('queryRef') for vals in sv.get('projections', {}).values() for x in vals]
@@ -252,25 +258,25 @@ def polish_report():
                 elif 'PlannerActionCenter.Demand Pattern' in rset and 'PlannerActionCenter.Item-Store Count' in rset:
                     title = 'Demand Pattern Mix'
                 elif vt == 'tableEx' and 'PlannerActionCenter.Planner Action' in rset:
-                    title = 'Planner Priority Queue'
+                    title = 'Planner Action Queue'
                 elif vt == 'tableEx' and 'PlannerActionCenter.Revenue 365D' in rset:
                     title = 'ABC-XYZ Portfolio Matrix'
             elif 'Demand Forecast & Model Performance' in page:
                 if 'PriorityModelHoldout.Model WAPE' in rset: title = 'Priority Holdout WAPE by Model'
                 elif 'BaselineModelSummary.Baseline WAPE' in rset: title = 'Rolling Baseline WAPE by Demand Pattern'
-                elif 'FeatureImportance.Feature Importance Share' in rset: title = 'Top Forecast Drivers'
+                elif 'FeatureImportance.Feature Importance Share' in rset: title = 'Top 8 Forecast Drivers'
                 elif 'ForecastWeekly.Weekly Forecast Units' in rset: title = 'Weekly Routed Forecast'
             elif 'Merchandise & Assortment Planning' in page:
                 if vt == 'tableEx': title = 'Merchandise Priority Detail'
                 elif 'PlannerActionCenter.Revenue 365D' in rset and 'PlannerActionCenter.Department' in rset: title = 'Revenue by Department'
                 elif 'PlannerActionCenter.ABC Class' in rset and 'PlannerActionCenter.Revenue 365D' in rset: title = 'Revenue Mix by ABC Class'
                 elif 'PlannerActionCenter.XYZ Class' in rset and 'PlannerActionCenter.Item-Store Count' in rset: title = 'Item-Store Mix by XYZ Class'
-                elif 'PlannerActionCenter.Category' in rset and 'PlannerActionCenter.Forecast Units 28D' in rset: title = '28-Day Forecast by Category'
+                elif 'PlannerActionCenter.Category' in rset and 'PlannerActionCenter.Forecast Units 28D' in rset: title = 'Forecast Units by Category'
             elif 'Planner Action Center' in page and vt == 'tableEx': title = 'Planner Priority Queue'
             elif 'Scenario Planning' in page:
                 if vt == 'clusteredColumnChart': title = 'Baseline vs Scenario Target Stock by ABC Class'
                 elif vt == 'clusteredBarChart': title = 'Scenario Target Stock by Department'
-                elif vt == 'tableEx': title = 'Scenario Detail by Department & ABC'
+                elif vt == 'tableEx': title = 'Scenario Detail by Department and ABC Class'
             if title:
                 set_title(sv, title, font=11, align='left')
 
@@ -282,7 +288,7 @@ def polish_report():
                     'PlannerActionCenter.Planning Change %', 'PlannerActionCenter.Risk Score',
                     'PlannerActionCenter.Planner Action'
                 ])
-                sort_table(sv, 'PlannerActionCenter', 'Risk Score', True)
+                sort_table(sv, 'PlannerActionCenter', 'Risk Score', True, secondary=('Revenue ($, 365D)', True))
             elif 'Executive Planning Overview' in page and 'PlannerActionCenter.Planner Action' in {x.get('queryRef') for x in sv.get('projections', {}).get('Values', [])}:
                 prune_table(sv, [
                     'PlannerActionCenter.Item', 'PlannerActionCenter.Store', 'PlannerActionCenter.ABC-XYZ',
