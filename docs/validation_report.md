@@ -1,62 +1,50 @@
-# Final Three-Stage Validation Report
+# Final Three-Pass Validation Report
 
-**Validation date:** 2026-09-13  
-**Scope:** Full pre-Power-BI review of the Walmart M5 demand-planning portfolio project.
+**Validation date:** 2026-09-28  
+**Scope:** Data, forecasting, planning logic, tracked evidence, Power BI model, and presentation consistency.
 
-## Result
+## Final status
 
-**PASS — ready for the Power BI build.**
+**PASS — canonical deliverable: `powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit`.**
 
-The full workflow was rerun from the raw M5 ZIP through final planner outputs. Two substantive issues were found during the review and corrected before this report was finalized:
+The project was reviewed in three separate passes. The audit found two stale presentation artifacts from an older Power BI snapshot: its LightGBM bias card showed **-0.2%** instead of the current **-0.86%**, and its default scenario showed a **43-unit** target-stock delta even though the default scenario is the baseline. That stale `.pbix` and the two affected screenshots were removed from the current repository. The canonical `.pbit` uses the current model metrics and forces the default scenario to reconcile exactly to baseline.
 
-1. **Potential price look-ahead:** early missing weekly prices were previously backfilled from later weeks. Price preparation now forward-fills only and encodes initial missing/pre-launch prices as unavailable (`0`).
-2. **Zero-baseline planning signal:** flat MA28 forecasts and zero-denominator periods could suppress meaningful planner movement. The action layer now uses recent run-rate movement plus a finite symmetric zero-baseline fallback.
+## Pass 1 — Data, leakage, and reproducibility
 
-The documentation, SQL, tests, and reproducible portfolio outputs were then synchronized to the corrected logic.
+**Status: PASS**
 
-## Stage 1 — Data integrity & reproducibility
+A fresh GitHub Actions build downloaded the public M5 source data and regenerated the analysis from scratch.
 
-Status: **PASS**
-
-Validated directly from `m5-forecasting-accuracy.zip`:
-
+Validated:
 - 30,490 unique item-store series
-- 3,049 items, 10 stores, 3 states, 3 categories, 7 departments
-- 1,941 observed sales days; 66,927,173 total units
-- 68.0% zero-demand observations
-- no negative sales values
-- no missing sales values
-- 6,841,121 price rows with no missing or non-positive prices
-- no duplicate `store_id × item_id × wm_yr_wk` price keys
-- 1,969 unique and contiguous calendar day keys (`d_1 ... d_1969`)
-- no duplicate item-store series IDs
-- full chunkwise equality check confirms all 30,490 validation rows and all `d_1 ... d_1913` values are exactly contained in the evaluation file after normalizing the official `_validation` / `_evaluation` ID suffixes
-- segmentation regenerated successfully with no missing ABC / XYZ / demand-pattern classes
-- ABC modeled-revenue shares reproduce approximately 80% / 15% / 5%
+- 3,049 items; 10 stores; 3 states; 3 categories; 7 departments
+- 1,941 observed sales days
+- 66,927,173 total units
+- 67.9978% zero-demand observations
+- no negative or missing sales values
+- 6,841,121 sell-price rows; no missing or non-positive sell prices
+- unique store × item × week price keys
+- validation history is an exact prefix of the evaluation history
+- price preparation is forward-fill only; no future-price backfill
+- priority-series selection for the holdout uses only pre-holdout data
 
-Demand-pattern counts reproduced exactly:
+Demand-pattern counts reproduced:
+- Intermittent: **23,096**
+- Lumpy: **3,761**
+- Smooth: **2,939**
+- Erratic: **694**
 
-| Segment | Series |
-|---|---:|
-| Intermittent | 23,096 |
-| Lumpy | 3,761 |
-| Smooth | 2,939 |
-| Erratic | 694 |
+## Pass 2 — Forecasting, planning logic, and numerical reconciliation
 
-## Stage 2 — Forecasting, leakage controls & planner logic
+**Status: PASS**
 
-Status: **PASS**
+Three chronological 28-day baseline folds continue to support:
+- Smooth → **WeekdayAvg8**
+- Intermittent → **MA28**
+- Erratic → **MA28**
+- Lumpy → **MA28**
 
-### Rolling baseline backtests
-Three chronological 28-day folds were rerun. The evidence-based routing remains:
-
-- Smooth → `WeekdayAvg8` (48.26% average WAPE)
-- Intermittent → `MA28` (92.18%)
-- Erratic → `MA28` (66.56%)
-- Lumpy → `MA28` (94.25%)
-
-### Priority LightGBM holdout
-The leakage-safe 3,000-series holdout was rerun twice with deterministic settings and reproduced the same metrics:
+Priority holdout metrics:
 
 | Model | WAPE | RMSE | Bias |
 |---|---:|---:|---:|
@@ -67,76 +55,70 @@ The leakage-safe 3,000-series holdout was rerun twice with deterministic setting
 
 Relative WAPE improvement vs MA28: **8.74%**.
 
-### Leakage review
-- Priority-series ranking uses only pre-holdout sales and prices.
-- Lag and rolling features do not include the target day.
-- Weekly price preparation no longer backfills from future weeks.
-- Before the fix, 4,191 training-day price cells across 44 priority series lacked a contemporaneous price; all corresponding target units were zero. These cells are now encoded as unavailable rather than filled with a future price.
-- No selected priority series has missing price coverage in the 28-day holdout or final 28-day M5 forecast horizon.
+Final routing:
+- MA28: **26,150**
+- LightGBM: **3,000**
+- WeekdayAvg8: **1,340**
 
-### Final routed forecast & planner outputs
-Routes reproduced exactly:
+Verified unfiltered planning totals:
+- Forecast 28D: **1,242,423.1 units**
+- Prior 28D: **1,231,764 units**
+- Aggregate growth: **+0.865%**
+- Revenue 365D: **$45,163,441.21**
+- Units 365D: **14,585,821**
+- A-class revenue share: **~80.0%**
+- High-risk item-store count (risk >= 70): **3,876**
+- Growth review count (planning signal >= 20): **5,028**
+- Decline review count (planning signal <= -20): **4,358**
+- Average risk score: **56.293**
+- Baseline safety stock: **225,815.5 units**
+- Baseline reorder point: **847,028.3 units**
+- Baseline target stock: **1,157,623.9 units**
 
-- MA28: 26,150 series
-- LightGBM: 3,000 series
-- WeekdayAvg8: 1,340 series
+Weekly forecast totals:
+- 2016-05-23: **304,629.23**
+- 2016-05-30: **313,010.08**
+- 2016-06-06: **317,923.50**
+- 2016-06-13: **306,863.57**
 
-Final planning-horizon totals:
+Weekly item-store forecasts reconcile to the 28-day item-store totals within the expected two-decimal export tolerance.
 
-- Forecast units: **1,242,423.1**
-- Prior 28-day units: **1,231,764**
-- Aggregate planning change: **+0.87%**
+## Pass 3 — Power BI, documentation, and presentation consistency
 
-Output invariants all passed:
+**Status: PASS**
 
-- no negative forecasts
-- risk score always finite and between 0 and 100
-- planning-change signal finite for all 30,490 series
-- safety stock non-negative
-- reorder point ≥ safety stock
-- target stock ≥ reorder point
-- service-level mapping matches ABC classes
-- only approved planner-action labels are emitted
-- four weekly forecast rows exist for every item-store series
-- weekly and 28-day forecasts reconcile within expected CSV rounding tolerance (maximum absolute difference 0.06 units)
+The compiled Power BI template is validated automatically after every build:
+- **8 tables**
+- **1 active relationship**
+- **5 report pages**
+- **67 visuals**
+- 30,490 Planner Action Center rows
+- 121,960 weekly forecast rows
+- 4 weekly rows per item-store series
+- no infinite numeric values in the embedded planner data
+- embedded holdout metrics exactly match regenerated source metrics
+- business-facing field names are used in report visuals
+- default scenario measures resolve to the stored baseline
+- priority queues use deterministic risk-first, revenue-second sorting
 
-## Stage 3 — Engineering, documentation & portfolio consistency
+The page-2 diagnostic tables are intentionally disconnected. Merchandise slicers can change the routed weekly forecast, while fixed holdout/backtest charts remain validation summaries.
 
-Status: **PASS**
+### Presentation corrections made during this audit
+- Removed the stale `.pbix` snapshot that no longer matched the validated model.
+- Removed two stale screenshots that contained the old bias/default-scenario values.
+- Made the validated `.pbit` the canonical downloadable report.
+- Standardized visible labels such as **Growth vs Prior**, **High-Risk Item-Store**, **Planner Action Queue**, **Top 8 Forecast Drivers**, and **Target Stock Change**.
+- Synchronized generated evidence files with the fresh CI build.
+- Removed the earlier synthetic dashboard preview; the README uses only screenshots captured from Power BI.
 
-- all Python source and test files pass `py_compile`
-- **9/9** lightweight regression/unit tests pass
-- baseline forecast utilities and all four ADI/CV² demand-pattern quadrants are tested
-- zero-baseline and MA28 planning-signal edge cases are tested
-- invalid planning horizon and invalid lead-time inputs are rejected
-- raw and large processed files remain excluded from Git
-- scripts now regenerate the tracked portfolio evidence files for baseline summaries, priority-model metrics, feature importance, segment summaries, and planner-action samples
-- data dictionary documents the current planner-output schema
-- SQL action queries use the planning-change signal so MA28-routed series are not structurally hidden at 0% literal forecast growth
-- Power BI specification references the corrected fields and current model outputs
-- all model-performance numbers in README, methodology, model card, and executive findings are aligned to the final leakage-safe run
+## AI / authorship presentation check
 
-## Two additional independent repeat passes
+Repository content was searched for explicit AI-assistant markers including **ChatGPT**, **OpenAI**, **LLM**, **prompt**, and **assistant**. No such markers are present in project code or documentation. GitHub Actions bot commits are standard CI automation and are not presented as analytical authorship.
 
-After the final three-stage validation above, the analytical pipeline was independently recomputed **two more times in fresh Python processes** from the raw M5 evaluation, calendar, and price files. Each repeat separately executed the data checks, demand segmentation, three rolling baseline folds, leakage-safe LightGBM holdout, final LightGBM route, scenario-planning logic, and output invariants.
+## Interpretation boundary
 
-Both repeats returned **PASS** and were numerically identical:
+M5 does not contain observed on-hand inventory, open purchase orders, vendor lead times, or actual Walmart replenishment decisions. Safety stock, reorder point, and target stock are therefore scenario-based decision-support calculations, not claims about Walmart's actual inventory policy.
 
-- zero-demand share: **67.9978%**
-- demand-pattern counts: 23,096 Intermittent; 3,761 Lumpy; 2,939 Smooth; 694 Erratic
-- baseline routing: Smooth → WeekdayAvg8; all other demand segments → MA28
-- LightGBM holdout WAPE: **45.1408%**
-- MA28 holdout WAPE: **49.4629%**
-- relative WAPE improvement: **8.7379%**
-- final route counts: 26,150 MA28; 3,000 LightGBM; 1,340 WeekdayAvg8
-- final 28-day forecast: **1,242,423.125 units**
-- prior 28-day units: **1,231,764**
-- aggregate planning change: **+0.8654%**
-- maximum weekly-to-28-day reconciliation difference: **0.0601 units**
-- deterministic final-output fingerprint was identical in both runs: `587214ccbf0dc2865059e4f31ee1b46233766dd3c9be77b982431a8ac58c8364`
+## Conclusion
 
-This repeatability check provides an additional control against transient execution differences or accidental non-determinism before the Power BI layer is built.
-
-## Pre-Power-BI conclusion
-
-The analytical foundation is internally consistent, reproducible, and suitable for portfolio presentation. Remaining work is the **Power BI visualization/data-model layer**, not a correction to the forecasting or planning foundation.
+The analytical results, tracked evidence, and canonical Power BI template are internally consistent. The project is suitable for portfolio use with the validated `.pbit` as the source of truth.
