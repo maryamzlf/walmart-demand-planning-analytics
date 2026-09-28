@@ -89,7 +89,7 @@ def _fit(X, y):
     model = lgb.LGBMRegressor(
         objective="tweedie", tweedie_variance_power=1.1, n_estimators=350, learning_rate=0.05,
         num_leaves=64, min_child_samples=50, subsample=0.85, colsample_bytree=0.85,
-        reg_lambda=0.1, random_state=42, n_jobs=-1, verbosity=-1, deterministic=True, force_col_wise=True,
+        reg_lambda=0.1, random_state=42, n_jobs=2, verbosity=-1, deterministic=True, force_col_wise=True,
     )
     model.fit(X, y, categorical_feature=CATEGORICAL)
     return model
