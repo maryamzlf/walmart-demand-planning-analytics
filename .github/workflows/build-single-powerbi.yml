@@ -199,6 +199,40 @@ jobs:
           "$TOOL" compile build/walmart_pbit_pbixproj build/Walmart_M5_Demand_Planning.pbit PBIT true
           ls -lh build/Walmart_M5_Demand_Planning.pbit
 
+      - name: Normalize Power BI page order
+        run: |
+          python - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+
+          p = Path('build/Walmart_M5_Demand_Planning.pbit')
+          tmp = p.with_suffix('.reordered.pbit')
+          desired = [
+              'Executive Planning Overview',
+              'Demand Forecast & Model Performance',
+              'Merchandise & Assortment Planning',
+              'Planner Action Center',
+              'Scenario Planning',
+          ]
+
+          with zipfile.ZipFile(p, 'r') as zin, zipfile.ZipFile(tmp, 'w') as zout:
+              for info in zin.infolist():
+                  payload = zin.read(info.filename)
+                  if info.filename.replace('\\','/').lstrip('/') == 'Report/Layout':
+                      layout = json.loads(payload.decode('utf-16-le'))
+                      by_name = {section.get('displayName'): section for section in layout.get('sections', [])}
+                      assert set(by_name) == set(desired), set(by_name)
+                      layout['sections'] = [by_name[name] for name in desired]
+                      config = json.loads(layout.get('config', '{}'))
+                      config['activeSectionIndex'] = 0
+                      layout['config'] = json.dumps(config, separators=(',', ':'))
+                      payload = json.dumps(layout, separators=(',', ':')).encode('utf-16-le')
+                  zout.writestr(info, payload)
+
+          tmp.replace(p)
+          print('Power BI page order normalized:', desired)
+          PY
+
       - name: Validate compiled Power BI package and embedded planner data
         run: |
           python - <<'PY'
@@ -232,6 +266,14 @@ jobs:
               assert len(tables) == 8, len(tables)
               assert len(rels) == 1, len(rels)
               assert len(sections) == 5, len(sections)
+              expected_page_order = [
+                  'Executive Planning Overview',
+                  'Demand Forecast & Model Performance',
+                  'Merchandise & Assortment Planning',
+                  'Planner Action Center',
+                  'Scenario Planning',
+              ]
+              assert [s.get('displayName') for s in sections] == expected_page_order, [s.get('displayName') for s in sections]
               assert visuals == 67, visuals
               table_names = {t['name'] for t in tables}
               assert {'PlannerActionCenter','ForecastWeekly','PriorityModelHoldout'} <= table_names
