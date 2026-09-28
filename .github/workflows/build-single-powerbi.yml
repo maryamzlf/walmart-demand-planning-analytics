@@ -84,6 +84,7 @@ jobs:
           assert abs(float(planner['revenue_365d'].sum()) - 45163441.21) < 1.0, planner['revenue_365d'].sum()
           assert int(planner['units_365d'].sum()) == 14585821, planner['units_365d'].sum()
           assert int(planner['prior_28d_units'].sum()) == 1231764, planner['prior_28d_units'].sum()
+          planner_total = float(planner['forecast_28d_units'].sum())
           assert abs(planner_total - 1242423.1) < 0.2, planner_total
           aggregate_growth = (planner_total - float(planner['prior_28d_units'].sum())) / float(planner['prior_28d_units'].sum())
           assert abs(aggregate_growth - 0.0086535) < 1e-5, aggregate_growth
