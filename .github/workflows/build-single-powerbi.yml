@@ -442,6 +442,13 @@ jobs:
                   'PlannerActionCenter.Planner Action',
               ], action_refs
 
+              weekly_visual = visual_with_title('Demand Forecast & Model Performance', 'Weekly Routed Forecast')
+              weekly_order = weekly_visual.get('prototypeQuery', {}).get('OrderBy', [])
+              assert len(weekly_order) >= 1, weekly_order
+              weekly_order_expr = weekly_order[0].get('Expression', {}).get('Column', {})
+              assert weekly_order_expr.get('Property') == 'Week Start', weekly_order
+              assert weekly_order[0].get('Direction') == 1, weekly_order
+
               feature_visual = visual_with_title('Demand Forecast & Model Performance', 'Forecast Driver Importance')
               feature_refs = [
                   x.get('queryRef')
