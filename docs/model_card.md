@@ -19,7 +19,7 @@ For the reported holdout result, priority series are ranked using only data avai
 - RMSE: 4.30
 - Bias: -0.86%
 
-Compared with the 28-day moving-average challenger (49.46% WAPE), the model improved WAPE by 8.7% on the priority holdout.
+Compared with the 28-day moving-average challenger (49.46% WAPE), the model improved WAPE by 8.74% on the priority holdout.
 
 ## Most influential feature groups
 The fitted model is dominated by recent demand level and recency signals, particularly 7-day and 28-day rolling demand, followed by lagged demand, item identity, weekday, variability, and price.
