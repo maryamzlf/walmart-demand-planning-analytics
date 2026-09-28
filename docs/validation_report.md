@@ -111,10 +111,6 @@ The page-2 diagnostic tables are intentionally disconnected. Merchandise slicers
 - Synchronized generated evidence files with the fresh CI build.
 - Removed the earlier synthetic dashboard preview; the README uses only screenshots captured from Power BI.
 
-## AI / authorship presentation check
-
-Repository content was searched for explicit AI-assistant markers including **ChatGPT**, **OpenAI**, **LLM**, **prompt**, and **assistant**. No such markers are present in project code or documentation. GitHub Actions bot commits are standard CI automation and are not presented as analytical authorship.
-
 ## Interpretation boundary
 
 M5 does not contain observed on-hand inventory, open purchase orders, vendor lead times, or actual Walmart replenishment decisions. Safety stock, reorder point, and target stock are therefore scenario-based decision-support calculations, not claims about Walmart's actual inventory policy.
