@@ -2,19 +2,15 @@
 
 **End-to-end retail demand forecasting, merchandise prioritization, replenishment scenarios, and Power BI decision support using Python, SQL, LightGBM, and the public Walmart M5 dataset.**
 
-The analysis follows a planning workflow from raw M5 data through audit, demand segmentation, time-based forecast validation, value-aware model routing, planner actions, inventory scenarios, and a five-page Power BI report at the **item × store** level.
+The workflow covers raw-data validation, demand segmentation, time-based forecast evaluation, value-aware model routing, planner actions, inventory scenarios, and a five-page Power BI report at the **item × store** level.
 
 ## Power BI report
 
-The final Power BI report is available as a ready-to-open `.pbix` file:
+The validated Power BI deliverable is a self-contained template:
 
-**[Download the final Power BI report (.pbix)](powerbi/Walmart_M5_Demand_Planning_Portfolio.pbix)**
+**[Download the validated Power BI report (.pbit)](powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)**
 
-A reusable template version is also available:
-
-[Download the Power BI template (.pbit)](powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)
-
-The `.pbix` is the primary portfolio file and contains the finished five-page report.
+Open the `.pbit` in Power BI Desktop. It contains the five-page report and embedded analytical outputs, with no local CSV path required for initial review. A `.pbix` copy can be created in Power BI Desktop with **File → Save As**.
 
 The report contains five decision-oriented pages:
 
@@ -24,22 +20,16 @@ The report contains five decision-oriented pages:
 4. **Planner Action Center** — ranked item-store actions using value, volatility, demand movement, and risk.
 5. **Scenario Planning** — lead-time, review-period, and service-level what-if analysis for safety stock, reorder point, and target stock.
 
-### Dashboard preview
+### Selected dashboard views
 
-#### 1. Executive Planning Overview
+#### Executive Planning Overview
 ![Executive Planning Overview](assets/dashboard_01_executive.webp)
 
-#### 2. Demand Forecast & Model Performance
-![Demand Forecast & Model Performance](assets/dashboard_02_model_performance.webp)
-
-#### 3. Merchandise & Assortment Planning
+#### Merchandise & Assortment Planning
 ![Merchandise & Assortment Planning](assets/dashboard_03_merchandise.webp)
 
-#### 4. Planner Action Center
+#### Planner Action Center
 ![Planner Action Center](assets/dashboard_04_action_center.webp)
-
-#### 5. Scenario Planning
-![Scenario Planning](assets/dashboard_05_scenario.webp)
 
 ## Business questions
 
@@ -176,16 +166,13 @@ See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage
 ├── .github/workflows/
 ├── assets/
 │   ├── dashboard_01_executive.webp
-│   ├── dashboard_02_model_performance.webp
 │   ├── dashboard_03_merchandise.webp
-│   ├── dashboard_04_action_center.webp
-│   └── dashboard_05_scenario.webp
+│   └── dashboard_04_action_center.webp
 ├── data/README.md
 ├── docs/
 ├── outputs/
 ├── powerbi/
 │   ├── README.md
-│   ├── Walmart_M5_Demand_Planning_Portfolio.pbix
 │   └── Walmart_M5_Demand_Planning_Portfolio.pbit
 ├── sql/planner_kpis.sql
 ├── src/
