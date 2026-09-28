@@ -20,7 +20,7 @@ The final report is implemented for a merchandise / demand / inventory planning 
 
 **KPIs:** LightGBM WAPE, WAPE Improvement, Forecast Bias.
 
-**Visuals:** Priority holdout WAPE by model, rolling baseline WAPE by demand pattern, Top 8 Forecast Drivers, and weekly routed forecast.
+**Visuals:** Priority holdout WAPE by model, rolling baseline WAPE by demand pattern, Forecast Driver Importance, and weekly routed forecast.
 
 ## Page 3 — Merchandise & Assortment Planning
 
