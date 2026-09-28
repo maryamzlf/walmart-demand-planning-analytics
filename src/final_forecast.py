@@ -45,7 +45,7 @@ def generate_final_forecast(raw_dir="data/raw", processed_dir="data/processed",
     # Keep the weekly table exactly reconciled to the published 28-day total.
     # Weeks 1-3 retain two-decimal detail; week 4 absorbs only the small
     # rounding residual created by the one-decimal 28-day planner output.
-    published_28d = planning["forecast_28d_units"].to_numpy(dtype=float)
+    published_28d = np.round(planning["forecast_28d_units"].to_numpy(dtype=float), 1)
     first_three = []
     for week in range(3):
         first_three.append(np.round(forecast[:, week*7:(week+1)*7].sum(axis=1), 2))
