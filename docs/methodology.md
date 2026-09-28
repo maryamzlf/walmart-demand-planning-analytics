@@ -72,7 +72,7 @@ Price handling is explicitly leakage-safe. Weekly prices are forward-filled only
 | 8-week weekday average | 49.53% | 4.78 | -1.07% |
 | 7-day seasonal naive | 56.75% | 5.44 | -6.12% |
 
-LightGBM reduced WAPE by **8.7% relative to the 28-day moving-average challenger**.
+LightGBM reduced WAPE by **8.74% relative to the 28-day moving-average challenger**.
 
 ## 7. Forecast routing
 - Top 3,000 priority item-store series: LightGBM
