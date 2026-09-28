@@ -369,7 +369,7 @@ jobs:
                   assert forbidden not in report_text, forbidden
               expected_titles = [
                   'Growth vs Prior','High-Risk Item-Store','Planner Action Queue',
-                  'Top 8 Forecast Drivers','Forecast Units by Category',
+                  'Forecast Driver Importance','Forecast Units by Category',
                   'Target Stock Change (Units)','Target Stock Change %'
               ]
               for title in expected_titles:
