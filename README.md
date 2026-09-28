@@ -22,6 +22,8 @@ The report contains five decision-oriented pages:
 
 ### Selected dashboard views
 
+The screenshots below are captured from the current validated report. All five report pages are included in the downloadable `.pbit`; only screenshots that match the current validated model are shown here.
+
 #### Executive Planning Overview
 ![Executive Planning Overview](assets/dashboard_01_executive.webp)
 
