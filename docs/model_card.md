@@ -24,6 +24,11 @@ Compared with the 28-day moving-average challenger (49.46% WAPE), the model impr
 ## Most influential feature groups
 The fitted model is dominated by recent demand level and recency signals, particularly 7-day and 28-day rolling demand, followed by lagged demand, item identity, weekday, variability, and price.
 
+## Validation scope
+The ML challenger is reported on one leakage-safe 28-day priority-series holdout. The simple-model router is evaluated across three rolling 28-day folds. A production deployment should add additional rolling ML holdouts and monitoring before operational use.
+
+The official M5 leaderboard metric is WRMSSE; the WAPE/MAE/RMSE/bias results here are planner-facing diagnostics and are not presented as leaderboard-equivalent scores.
+
 ## Known limitations
 - Demand is zero-heavy and forecast errors remain material at the individual item-store-day level.
 - The public dataset ends in 2016; the project demonstrates methodology, not current Walmart performance.
