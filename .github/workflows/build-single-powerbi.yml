@@ -98,7 +98,7 @@ jobs:
           weekly_by_key = weekly.groupby('item_store_key', as_index=True)['forecast_units'].sum()
           planner_by_key = planner.set_index('item_store_key')['forecast_28d_units']
           max_recon = float((weekly_by_key.reindex(planner_by_key.index) - planner_by_key).abs().max())
-          assert max_recon <= 1e-6, max_recon
+          assert max_recon <= 1e-9, max_recon
           print('Power BI source rows:', len(planner), len(weekly))
           print('Verified source KPIs:', planner_total, planner['revenue_365d'].sum(), abc_revenue.to_dict(), 'weekly max reconciliation', max_recon)
           PY
@@ -271,7 +271,7 @@ jobs:
                   weekly_by_key[r[1]] = weekly_by_key.get(r[1], 0.0) + float(r[10])
               planner_by_key = {r[1]: float(r[20]) for r in planner_rows}
               max_weekly_recon = max(abs(weekly_by_key[k] - planner_by_key[k]) for k in planner_by_key)
-              assert max_weekly_recon <= 1e-6, max_weekly_recon
+              assert max_weekly_recon <= 1e-9, max_weekly_recon
 
               source_priority = pd.read_csv('outputs/priority_model_holdout.csv').set_index('model')
               embedded_priority = {
