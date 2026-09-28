@@ -7,7 +7,7 @@
 
 **PASS — canonical deliverable: `powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit`.**
 
-The project was reviewed in three separate passes. The audit found two stale presentation artifacts from an older Power BI snapshot: its LightGBM bias card showed **-0.2%** instead of the current **-0.86%**, and its default scenario showed a **43-unit** target-stock delta even though the default scenario is the baseline. That stale `.pbix` and the two affected screenshots were removed from the current repository. The canonical `.pbit` uses the current model metrics and forces the default scenario to reconcile exactly to baseline.
+The project was reviewed in three separate passes. The audit found an older Power BI snapshot and two screenshots with outdated model/scenario values. Those stale artifacts were removed from the current repository. The canonical `.pbit` uses the current model metrics and forces the default scenario to reconcile exactly to baseline.
 
 ## Pass 1 — Data, leakage, and reproducibility
 
