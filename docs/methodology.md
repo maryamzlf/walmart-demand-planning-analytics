@@ -8,7 +8,7 @@ The project converts historical Walmart unit sales, price, calendar, event, and 
 3. Which demand patterns require different forecasting approaches?
 4. What inventory coverage would be appropriate under explicit service-level and lead-time scenarios?
 
-The repository deliberately separates **observed Walmart data** from **scenario-based planning outputs**. M5 does not provide on-hand inventory, purchase orders, supplier lead times, or actual Walmart replenishment decisions. Safety stock, reorder point, and target stock are therefore planning scenarios, not claims about Walmart's internal inventory.
+The repository deliberately separates **observed Walmart data** from **scenario-based planning outputs**. M5 does not provide on-hand inventory, purchase orders, supplier lead times, or actual Walmart replenishment decisions. Safety stock, reorder point, and target stock are therefore planning scenarios, not claims about Walmart's internal inventory. Zero-sales days are not interpreted as stockouts because the dataset does not provide inventory availability or lost-sales information.
 
 ## 2. Data grain and scope
 The bottom-level forecasting grain is **item × store × day**.
