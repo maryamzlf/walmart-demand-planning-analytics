@@ -387,6 +387,54 @@ jobs:
               ]
               for title in expected_titles:
                   assert title in report_text, title
+              assert 'Top 8 Forecast Drivers' not in report_text
+
+              def visual_with_title(page_name, wanted_title):
+                  page = next(s for s in sections if s.get('displayName') == page_name)
+                  for vc in page.get('visualContainers', []):
+                      cfg = json.loads(vc.get('config', '{}'))
+                      sv = cfg.get('singleVisual', {})
+                      title_objects = sv.get('vcObjects', {}).get('title', [])
+                      for obj in title_objects:
+                          value = obj.get('properties', {}).get('text', {}).get('expr', {}).get('Literal', {}).get('Value')
+                          if isinstance(value, str) and value.strip("'") == wanted_title:
+                              return sv
+                  raise AssertionError((page_name, wanted_title))
+
+              merch = visual_with_title('Merchandise & Assortment Planning', 'Merchandise Priority Detail')
+              merch_refs = [
+                  x.get('queryRef')
+                  for values in merch.get('projections', {}).values()
+                  for x in values
+              ]
+              assert merch_refs == [
+                  'PlannerActionCenter.Item',
+                  'PlannerActionCenter.Store',
+                  'PlannerActionCenter.Department',
+                  'PlannerActionCenter.ABC Class',
+                  'PlannerActionCenter.XYZ Class',
+                  'PlannerActionCenter.Revenue ($, 365D)',
+                  'PlannerActionCenter.Forecast (28D)',
+                  'PlannerActionCenter.Planning Change %',
+                  'PlannerActionCenter.Risk Score',
+              ], merch_refs
+              merch_order = merch.get('prototypeQuery', {}).get('OrderBy', [])
+              merch_order_props = [
+                  x.get('Expression', {}).get('Column', {}).get('Property')
+                  for x in merch_order
+              ]
+              assert merch_order_props[:2] == ['Risk Score', 'Revenue ($, 365D)'], merch_order_props
+
+              feature_visual = visual_with_title('Demand Forecast & Model Performance', 'Forecast Driver Importance')
+              feature_refs = [
+                  x.get('queryRef')
+                  for values in feature_visual.get('projections', {}).values()
+                  for x in values
+              ]
+              assert feature_refs == [
+                  'FeatureImportance.Feature',
+                  'FeatureImportance.Feature Importance Share'
+              ], feature_refs
 
               print('VALIDATED POLISHED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line, '; revenue', planner_revenue, '; forecast', planner_forecast)
           PY
