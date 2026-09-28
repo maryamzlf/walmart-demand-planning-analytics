@@ -178,7 +178,6 @@ See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage
 ├── src/
 ├── tests/
 ├── tools/
-├── config.yaml
 └── requirements.txt
 ```
 
