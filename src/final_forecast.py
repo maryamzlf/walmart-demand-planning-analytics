@@ -41,12 +41,22 @@ def generate_final_forecast(raw_dir="data/raw", processed_dir="data/processed",
 
     weekly = []
     future_dates = calendar.set_index("d").loc[[f"d_{i}" for i in range(1942, 1970)], "date"].to_numpy()
-    for week in range(4):
-        block = forecast[:, week*7:(week+1)*7].sum(axis=1)
+
+    # Keep the weekly table exactly reconciled to the published 28-day total.
+    # Weeks 1-3 retain two-decimal detail; week 4 absorbs only the small
+    # rounding residual created by the one-decimal 28-day planner output.
+    published_28d = planning["forecast_28d_units"].to_numpy(dtype=float)
+    first_three = []
+    for week in range(3):
+        first_three.append(np.round(forecast[:, week*7:(week+1)*7].sum(axis=1), 2))
+    fourth = published_28d - np.sum(first_three, axis=0)
+    weekly_blocks = first_three + [fourth]
+
+    for week, block in enumerate(weekly_blocks):
         frame = sales[["id","item_id","dept_id","cat_id","store_id","state_id"]].copy()
         frame["forecast_week"] = week + 1
         frame["week_start_date"] = future_dates[week*7]
-        frame["forecast_units"] = np.round(block, 2)
+        frame["forecast_units"] = block
         weekly.append(frame)
     pd.concat(weekly, ignore_index=True).to_csv(processed_dir / "forecast_weekly_item_store.csv", index=False)
 
