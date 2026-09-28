@@ -84,6 +84,25 @@ jobs:
           assert abs(float(planner['revenue_365d'].sum()) - 45163441.21) < 1.0, planner['revenue_365d'].sum()
           assert int(planner['units_365d'].sum()) == 14585821, planner['units_365d'].sum()
           assert int(planner['prior_28d_units'].sum()) == 1231764, planner['prior_28d_units'].sum()
+          assert abs(planner_total - 1242423.1) < 0.2, planner_total
+          aggregate_growth = (planner_total - float(planner['prior_28d_units'].sum())) / float(planner['prior_28d_units'].sum())
+          assert abs(aggregate_growth - 0.0086535) < 1e-5, aggregate_growth
+          assert int((planner['demand_risk_score'] >= 70).sum()) == 3876
+          assert int((planner['planning_change_signal_pct'] >= 20).sum()) == 5028
+          assert int((planner['planning_change_signal_pct'] <= -20).sum()) == 4358
+          assert abs(float(planner['demand_risk_score'].mean()) - 56.2933) < 0.001
+          assert abs(float(planner['safety_stock_scenario_units'].sum()) - 225815.5) < 0.2
+          assert abs(float(planner['reorder_point_scenario_units'].sum()) - 847028.3) < 0.2
+          assert abs(float(planner['target_stock_scenario_units'].sum()) - 1157623.9) < 0.2
+          priority = pd.read_csv('outputs/priority_model_holdout.csv').set_index('model')
+          assert abs(float(priority.loc['LightGBM','wape']) - 0.4514082968235016) < 1e-12
+          assert abs(float(priority.loc['LightGBM','bias_pct']) - (-0.008613113313913345)) < 1e-12
+          rel_improvement = (float(priority.loc['MA28','wape']) - float(priority.loc['LightGBM','wape'])) / float(priority.loc['MA28','wape'])
+          assert abs(rel_improvement - 0.08737920995265404) < 1e-12
+          baseline = pd.read_csv('outputs/baseline_model_summary.csv')
+          best = baseline.loc[baseline.groupby('segment')['avg_wape'].idxmin(), ['segment','model']]
+          best_routes = dict(zip(best['segment'], best['model']))
+          assert best_routes == {'Erratic':'MA28','Intermittent':'MA28','Lumpy':'MA28','Smooth':'WeekdayAvg8'}, best_routes
           assert planner['demand_segment'].value_counts().to_dict() == {
               'Intermittent': 23096, 'Lumpy': 3761, 'Smooth': 2939, 'Erratic': 694
           }, planner['demand_segment'].value_counts().to_dict()
@@ -286,6 +305,24 @@ jobs:
               scenario_safety = pac_measures.get('Scenario Safety Stock Units')
               assert scenario_target and 'Baseline Target Stock Units' in str(scenario_target), scenario_target
               assert scenario_safety and 'Baseline Safety Stock Units' in str(scenario_safety), scenario_safety
+              scenario_delta = pac_measures.get('Scenario Target Stock Delta')
+              scenario_delta_pct = pac_measures.get('Scenario Target Stock Delta %')
+              assert scenario_delta and 'Scenario Target Stock Units' in str(scenario_delta) and 'Baseline Target Stock Units' in str(scenario_delta)
+              assert scenario_delta_pct and 'Scenario Target Stock Delta' in str(scenario_delta_pct)
+              priority_table = next(t for t in tables if t['name'] == 'PriorityModelHoldout')
+              priority_measures = {m['name']: m.get('expression') for m in priority_table.get('measures', [])}
+              bias_measure = priority_measures.get('Priority LightGBM Bias %')
+              assert bias_measure and 'bias_pct' in str(bias_measure) and 'LightGBM' in str(bias_measure)
+              report_text = json.dumps(report)
+              for forbidden in ['item_id','store_id','dept_id','cat_id','abc_class','xyz_class','demand_segment','planner_action','forecast_model_route']:
+                  assert forbidden not in report_text, forbidden
+              expected_titles = [
+                  'Growth vs Prior','High-Risk Item-Store','Planner Action Queue',
+                  'Top 8 Forecast Drivers','Forecast Units by Category',
+                  'Target Stock Change (Units)','Target Stock Change %'
+              ]
+              for title in expected_titles:
+                  assert title in report_text, title
 
               print('VALIDATED POLISHED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line, '; revenue', planner_revenue, '; forecast', planner_forecast)
           PY
@@ -296,11 +333,17 @@ jobs:
           cp build/Walmart_M5_Demand_Planning.pbit powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit
+          git add powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit \
+            outputs/baseline_model_summary.csv \
+            outputs/priority_model_holdout.csv \
+            outputs/priority_model_holdout.json \
+            outputs/priority_feature_importance.csv \
+            outputs/segment_summary.csv \
+            outputs/planner_action_sample.csv
           if git diff --cached --quiet; then
             echo "Power BI template already up to date."
           else
-            git commit -m "Add generated Power BI portfolio template [skip ci]"
+            git commit -m "Sync validated Power BI and analytical evidence [skip ci]"
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
 
