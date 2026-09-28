@@ -106,3 +106,9 @@ The scripts regenerate the portfolio evidence files:
 - `final_forecast.py` writes the Power BI-ready large tables plus `outputs/segment_summary.csv` and `outputs/planner_action_sample.csv`.
 
 Raw and large processed data remain excluded from Git and are regenerated from the public M5 source files.
+
+
+## Evaluation metric choice
+The official M5 competition uses WRMSSE. This project does not present its WAPE results as leaderboard-equivalent scores. WAPE, MAE, RMSE, and aggregate bias are used here because the objective is a planner-facing demand workflow with interpretable unit and directional error measures rather than competition ranking.
+
+For intermittent and lumpy demand, the normal-theory safety-stock formula is a transparent planning approximation, not a guaranteed service-level model.
