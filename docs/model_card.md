@@ -1,41 +1,47 @@
 # Model Card: Priority-Series LightGBM
 
 ## Intended use
-Forecast the next 28 days of unit demand for the highest-value item-store combinations in the M5 retail dataset. The model is a planning-support challenger, not an autonomous ordering system.
+
+Forecast 28 days of unit demand for the 3,000 highest-value item-store series in the M5 dataset. The model supports planning analysis; it is not an autonomous ordering system.
 
 ## Training design
-- Global model across 3,000 priority item-store series
-- Trailing daily history with lag and rolling-window features
-- Tweedie regression objective
-- Recursive 28-day forecast
-- Calendar, event, SNAP, and price covariates
 
-## Leakage controls
-For the reported holdout result, priority series are ranked using only data available before the holdout. Lag and rolling features are shifted so the target day is never included in its own predictors. Price preparation uses forward-fill only; pre-launch missing prices are encoded as unavailable (`0`) instead of being backfilled from future weeks.
+- one global model across 3,000 priority series
+- Tweedie regression objective
+- recursive 28-day forecast
+- lag and rolling-demand features
+- calendar, event, SNAP, price, and hierarchy covariates
+
+## Holdout cohort and leakage controls
+
+Priority series are ranked by **exact trailing revenue available before the holdout**: weekly units × the sell price for the same item-store-week, summed over the trailing 365 days.
+
+Lag/rolling features are shifted so the target day is never included in its predictors. Prices are forward-filled only; later prices are not backfilled into earlier weeks.
 
 ## Holdout performance
-- WAPE: 45.14%
-- MAE: 2.51 units/day-series
-- RMSE: 4.30
-- Bias: -0.86%
 
-Compared with the 28-day moving-average challenger (49.46% WAPE), the model improved WAPE by 8.74% on the priority holdout.
+- WAPE: **45.03%**
+- MAE: **2.50** units per item-store-day
+- RMSE: **4.26**
+- Bias: **-0.67%**
+- MA28 WAPE: **49.46%**
+- relative WAPE improvement vs MA28: **8.96%**
 
-## Most influential feature groups
-The fitted model is dominated by recent demand level and recency signals, particularly 7-day and 28-day rolling demand, followed by lagged demand, item identity, weekday, variability, and price.
+## Feature behavior
+
+Recent demand dominates feature gain. The largest contributors are the 7-day rolling mean, 28-day rolling mean, lag-1 demand, item identity, 56-day rolling mean, weekday, and recent volatility. Feature importance is descriptive of this fitted model and should not be read as causal effect.
 
 ## Validation scope
-The ML challenger is reported on one leakage-safe 28-day priority-series holdout. The simple-model router is evaluated across three rolling 28-day folds. A production deployment should add additional rolling ML holdouts and monitoring before operational use.
 
-The official M5 leaderboard metric is WRMSSE; the WAPE/MAE/RMSE/bias results here are planner-facing diagnostics and are not presented as leaderboard-equivalent scores.
+The ML challenger is reported on one leakage-safe 28-day priority holdout. The simple-model router is evaluated on three rolling 28-day folds. Production use would require additional rolling ML holdouts and ongoing monitoring.
 
-## Known limitations
-- Demand is zero-heavy and forecast errors remain material at the individual item-store-day level.
-- The public dataset ends in 2016; the project demonstrates methodology, not current Walmart performance.
-- Price is observed weekly, so intra-week price variation cannot be modeled.
-- M5's future horizon prices are treated as known covariates; this assumption may not hold in every real planning environment.
-- No on-hand inventory or supplier constraints are available.
-- Recursive forecasting can compound error across the 28-day horizon.
+## Limitations
 
-## Governance choice
-A simpler forecast is retained for the long tail unless the ML challenger demonstrates sufficient value. This limits unnecessary complexity and makes the model-routing logic explainable to planners.
+- demand is zero-heavy and item-store-day error remains material
+- the public data ends in 2016
+- sell price is weekly
+- future-horizon M5 prices are treated as known covariates
+- on-hand inventory, open POs, vendor lead times, and supplier constraints are unavailable
+- recursive forecasting can compound error across the horizon
+
+The official M5 leaderboard uses WRMSSE. WAPE/MAE/RMSE/bias here are planning diagnostics, not leaderboard scores.

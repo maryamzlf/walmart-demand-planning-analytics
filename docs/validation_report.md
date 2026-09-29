@@ -1,32 +1,31 @@
 # Final Three-Pass Validation Report
 
-**Validation date:** 2026-09-28  
-**Scope:** Data, forecasting, planning logic, tracked evidence, Power BI model, and presentation consistency.
+**Validation date:** 2026-09-29  
+**Canonical deliverable:** `powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit`
 
 ## Final status
 
-**PASS — canonical deliverable: `powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit`.**
+**PASS**
 
-The project was reviewed in three separate passes. The audit found an older Power BI snapshot and two screenshots with outdated model/scenario values. Those stale artifacts were removed from the current repository. The canonical `.pbit` uses the current model metrics and forces the default scenario to reconcile exactly to baseline.
+The project was rerun from public M5 source files and reviewed in three independent passes: source/reproducibility, model/planning calculations, and Power BI/presentation consistency.
 
-## Pass 1 — Data, leakage, and reproducibility
+## Pass 1 — Data integrity, leakage, and reproducibility
 
 **Status: PASS**
 
-A fresh GitHub Actions build downloaded the public M5 source data and regenerated the analysis from scratch.
-
-Validated:
-- 30,490 unique item-store series
-- 3,049 items; 10 stores; 3 states; 3 categories; 7 departments
+Verified in a fresh CI build:
+- 30,490 item-store series
 - 1,941 observed sales days
 - 66,927,173 total units
 - 67.9978% zero-demand observations
-- no negative or missing sales values
-- 6,841,121 sell-price rows; no missing or non-positive sell prices
+- no negative or missing sales
+- no duplicate series IDs or calendar-day keys
+- 6,841,121 price rows
+- no missing or non-positive sell prices
 - unique store × item × week price keys
-- validation history is an exact prefix of the evaluation history
-- price preparation is forward-fill only; no future-price backfill
-- priority-series selection for the holdout uses only pre-holdout data
+- validation history exactly matches `d_1 ... d_1913` in the evaluation file for all 30,490 series
+- forward-fill only for price histories; no future-price backfill
+- exact trailing pre-holdout revenue for ML priority selection
 
 Demand-pattern counts reproduced:
 - Intermittent: **23,096**
@@ -34,46 +33,49 @@ Demand-pattern counts reproduced:
 - Smooth: **2,939**
 - Erratic: **694**
 
-## Pass 2 — Forecasting, planning logic, and numerical reconciliation
+Code quality passed syntax checks, **9 tests**, and a repository-content check for obvious assistant/AI attribution language.
+
+## Pass 2 — Forecasting and planning calculations
 
 **Status: PASS**
 
-Three chronological 28-day baseline folds continue to support:
+Three rolling 28-day baseline folds still select:
 - Smooth → **WeekdayAvg8**
 - Intermittent → **MA28**
 - Erratic → **MA28**
 - Lumpy → **MA28**
 
-Priority holdout metrics:
+The priority holdout cohort was corrected to use the same value definition as final routing: exact trailing revenue rather than unit volume × average price.
 
-| Model | WAPE | RMSE | Bias |
-|---|---:|---:|---:|
-| LightGBM | **45.14%** | **4.30** | **-0.86%** |
-| MA28 | 49.46% | 4.86 | -1.25% |
-| WeekdayAvg8 | 49.53% | 4.78 | -1.07% |
-| SeasonalNaive7 | 56.75% | 5.44 | -6.12% |
+| Model | WAPE | MAE | RMSE | Bias |
+|---|---:|---:|---:|---:|
+| LightGBM | **45.03%** | **2.50** | **4.26** | **-0.67%** |
+| MA28 | 49.46% | 2.74 | 4.86 | -1.28% |
+| WeekdayAvg8 | 49.54% | 2.75 | 4.78 | -1.06% |
+| SeasonalNaive7 | 56.77% | 3.15 | 5.43 | -6.16% |
 
-Relative WAPE improvement vs MA28: **8.74%**.
+Relative WAPE improvement vs MA28: **8.96%**.
 
 Final routing:
 - MA28: **26,150**
 - LightGBM: **3,000**
 - WeekdayAvg8: **1,340**
 
-Verified unfiltered planning totals:
-- Forecast 28D: **1,242,423.1 units**
-- Prior 28D: **1,231,764 units**
-- Aggregate growth: **+0.865%**
-- Revenue 365D: **$45,163,441.21**
+Verified planning totals:
+- Forecast 28D: **1,242,423.1**
+- Prior 28D: **1,231,764**
+- Growth: **+0.865%**
+- Estimated revenue 365D: **$45,163,441.21**
 - Units 365D: **14,585,821**
-- A-class revenue share: **~80.0%**
-- High-risk item-store count (risk >= 70): **3,876**
-- Growth review count (planning signal >= 20): **5,028**
-- Decline review count (planning signal <= -20): **4,358**
+- A-class revenue share: **79.999%**
+- High-risk records (risk ≥ 70): **3,876**
+- High-risk estimated-revenue share: **16.63%**
+- Growth review: **5,028**
+- Decline review: **4,358**
 - Average risk score: **56.293**
-- Baseline safety stock: **225,815.5 units**
-- Baseline reorder point: **847,028.3 units**
-- Baseline target stock: **1,157,623.9 units**
+- Baseline safety stock: **225,815.5**
+- Baseline reorder point: **847,028.3**
+- Baseline target stock: **1,157,623.9**
 
 Weekly forecast totals:
 - 2016-05-23: **304,629.23**
@@ -81,43 +83,39 @@ Weekly forecast totals:
 - 2016-06-06: **317,923.50**
 - 2016-06-13: **306,863.57**
 
-Weekly item-store forecasts reconcile to the 28-day item-store totals within the expected two-decimal export tolerance.
+At item-store level, the four exported weekly values reconcile to the 28-day forecast within **0.06 units**, consistent with two-decimal weekly rounding.
 
-## Pass 3 — Power BI, documentation, and presentation consistency
+## Pass 3 — Power BI and presentation consistency
 
 **Status: PASS**
 
-The compiled Power BI template is validated automatically after every build:
+The compiled template is checked for:
 - **8 tables**
 - **1 active relationship**
-- **5 report pages**
+- **5 pages**
 - **67 visuals**
 - 30,490 Planner Action Center rows
 - 121,960 weekly forecast rows
-- 4 weekly rows per item-store series
-- no infinite numeric values in the embedded planner data
-- embedded holdout metrics exactly match regenerated source metrics
-- business-facing field names are used in report visuals
-- default scenario measures resolve to the stored baseline
-- priority queues use deterministic risk-first, revenue-second sorting
+- four weekly rows per item-store
+- no infinite values in embedded planner data
+- embedded model metrics equal the regenerated CSV metrics
+- chronological weekly-chart sort
+- business-facing field names in report visuals
+- deterministic risk-first action queues
+- default Scenario Planning values equal stored baseline
+- feature-importance visual bound to the full feature table
 
-The page-2 diagnostic tables are intentionally disconnected. Merchandise slicers can change the routed weekly forecast, while fixed holdout/backtest charts remain validation summaries.
+Corrections made in this review:
+- replaced the holdout revenue proxy with exact pre-holdout trailing revenue
+- updated reported model metrics to the corrected holdout
+- added raw-source duplicate/price/history checks to CI
+- removed the stale Executive screenshot because its WAPE card showed the previous holdout result
+- kept older PBIX snapshots out of the canonical deliverables
+- removed an unused Top-8 feature-filter transformation
+- simplified internal build-tool and workflow names
 
-### Presentation corrections made during this audit
-- Renamed the feature-importance visual to **Forecast Driver Importance** because the embedded table contains the full feature set; the previous “Top 8” wording could imply a filter that was not actually applied.
-- Aligned **Merchandise Priority Detail** with the validated dashboard view: nine business-facing columns, sorted by Risk Score descending and trailing revenue second.
-- Added explicit regression checks for the **16.63% high-risk revenue share** and all four weekly forecast totals so displayed KPIs and the line chart are validated against embedded source data.
-- Removed the stale `.pbix` snapshot that no longer matched the validated model.
-- Removed two stale screenshots that contained the old bias/default-scenario values.
-- Made the validated `.pbit` the canonical downloadable report.
-- Standardized visible labels such as **Growth vs Prior**, **High-Risk Item-Store**, **Planner Action Queue**, **Top 8 Forecast Drivers**, and **Target Stock Change**.
-- Synchronized generated evidence files with the fresh CI build.
-- Removed the earlier synthetic dashboard preview; the README uses only screenshots captured from Power BI.
+Only screenshots whose KPIs still match the current run remain in the README.
 
 ## Interpretation boundary
 
-M5 does not contain observed on-hand inventory, open purchase orders, vendor lead times, or actual Walmart replenishment decisions. Safety stock, reorder point, and target stock are therefore scenario-based decision-support calculations, not claims about Walmart's actual inventory policy.
-
-## Conclusion
-
-The analytical results, tracked evidence, and canonical Power BI template are internally consistent. The project is suitable for portfolio use with the validated `.pbit` as the source of truth.
+M5 does not provide observed on-hand inventory, open purchase orders, supplier lead times, lost sales, or Walmart's actual replenishment decisions. Inventory quantities in the report are planning scenarios, not statements about Walmart's real inventory policy.

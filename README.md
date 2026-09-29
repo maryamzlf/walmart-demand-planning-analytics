@@ -1,45 +1,31 @@
 # Walmart M5 Demand Planning Analytics
 
-**End-to-end retail demand forecasting, merchandise prioritization, replenishment scenarios, and Power BI decision support using Python, SQL, LightGBM, and the public Walmart M5 dataset.**
+End-to-end retail demand forecasting and planning workflow using Python, SQL, LightGBM, and Power BI on the public Walmart M5 dataset.
 
-The workflow covers raw-data validation, demand segmentation, time-based forecast evaluation, value-aware model routing, planner actions, inventory scenarios, and a five-page Power BI report at the **item × store** level.
+The project works at the **item × store** level and connects data validation, demand segmentation, time-based forecast evaluation, value-based model routing, planner actions, and inventory scenarios.
 
 ## Power BI report
 
-The validated Power BI deliverable is a self-contained template:
-
 **[Download the validated Power BI report (.pbit)](powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)**
 
-Open the `.pbit` in Power BI Desktop. It contains the five-page report and embedded analytical outputs, with no local CSV path required for initial review. A `.pbix` copy can be created in Power BI Desktop with **File → Save As**.
+Open the `.pbit` in Power BI Desktop. The file contains the five-page report and embedded analytical outputs; no local CSV path is required for initial review. A `.pbix` copy can be created in Power BI Desktop with **File → Save As**.
 
-The report contains five decision-oriented pages:
-
-1. **Executive Planning Overview** — 28-day demand outlook, risk, state/department views, ABC-XYZ mix, and priority queue.
-2. **Demand Forecast & Model Performance** — model WAPE, forecast bias, rolling baseline comparison, top forecast drivers, and weekly routed forecast.
-3. **Merchandise & Assortment Planning** — revenue, units, ABC/XYZ mix, category outlook, and high-priority merchandise.
+Report pages:
+1. **Executive Planning Overview** — 28-day outlook, risk, state/department views, ABC-XYZ mix, and priority queue.
+2. **Demand Forecast & Model Performance** — holdout WAPE, bias, rolling baseline comparison, feature importance, and weekly routed forecast.
+3. **Merchandise & Assortment Planning** — revenue, units, ABC/XYZ mix, category outlook, and priority merchandise.
 4. **Planner Action Center** — ranked item-store actions using value, volatility, demand movement, and risk.
 5. **Scenario Planning** — lead-time, review-period, and service-level what-if analysis for safety stock, reorder point, and target stock.
 
 ### Selected dashboard views
 
-The screenshots below are representative captures of the validated report and match the current KPI definitions. The downloadable `.pbit` is the source of truth for the five-page interactive report.
-
-#### Executive Planning Overview
-![Executive Planning Overview](assets/dashboard_01_executive.webp)
+These captures contain KPIs that are unchanged by the final model-validation pass. The downloadable `.pbit` is the source of truth for all five interactive pages.
 
 #### Merchandise & Assortment Planning
-![Merchandise & Assortment Planning](assets/dashboard_03_merchandise.webp)
+![Merchandise & Assortment Planning](assets/merchandise_assortment_planning.webp)
 
 #### Planner Action Center
-![Planner Action Center](assets/dashboard_04_action_center.webp)
-
-## Business questions
-
-- What will likely sell during the next 28 days?
-- Which item-store combinations deserve the most planner attention?
-- Which demand patterns need different forecasting methods?
-- Where is demand accelerating or declining?
-- What safety-stock / reorder-point coverage would be reasonable under explicit lead-time and service-level assumptions?
+![Planner Action Center](assets/planner_action_center.webp)
 
 ## Key results
 
@@ -47,22 +33,24 @@ The screenshots below are representative captures of the validated report and ma
 |---|---:|
 | Item-store series | 30,490 |
 | Observed daily records | 59.2M |
-| 28-day routed forecast | ~1.24M units |
-| Priority LightGBM WAPE | **45.14%** |
-| Relative WAPE improvement vs MA28 | **8.74%** |
-| A-class trailing revenue share | **80.0%** |
-| High-risk item-store records | **3,876** |
-| Power BI report pages | **5** |
+| 28-day routed forecast | 1,242,423.1 units |
+| Prior 28-day units | 1,231,764 |
+| Aggregate forecast growth | +0.87% |
+| Priority LightGBM WAPE | **45.03%** |
+| Relative WAPE improvement vs MA28 | **8.96%** |
+| A-class trailing revenue share | ~80.0% |
+| High-risk item-store records (risk ≥ 70) | **3,876** |
+| Power BI report pages | 5 |
 
-## Forecast routing rationale
+## Forecast routing
 
-A large share of retail demand is sparse and intermittent, so forcing one forecasting model across every SKU-store combination is inefficient and often inaccurate. This project uses a **value-aware forecast router**:
+Demand is highly sparse, so the final router does not force one model across all 30,490 series:
 
-1. **Top 3,000 high-value item-store series** → global LightGBM challenger
+1. **Top 3,000 item-store series by trailing estimated revenue** → LightGBM
 2. **Remaining Smooth demand** → 8-week weekday average
 3. **Remaining Intermittent / Erratic / Lumpy demand** → 28-day moving average
 
-The model architecture is driven by backtest evidence rather than by model complexity for its own sake.
+The same value definition is used for holdout cohort selection: weekly units × the sell price for that item-store-week, summed over the trailing pre-holdout window.
 
 ## Planning architecture
 
@@ -98,13 +86,13 @@ flowchart LR
 | Total units | 66,927,173 |
 | Zero-demand observations | 68.0% |
 
-The public M5 data includes unit sales, weekly sell prices, calendar events, and SNAP indicators. It does **not** include Walmart on-hand inventory, purchase orders, vendor lead times, or actual replenishment decisions. Zero-sales days are therefore treated as observed sales outcomes, not inferred stockouts.
+The raw-data checks also verify no negative/missing sales, no duplicate series/calendar keys, valid positive sell prices, unique store-item-week price keys, and exact equality between the validation history and the first 1,913 days of the evaluation file.
 
-A final QA pass verified that the validation file is an exact prefix of the evaluation history for all **30,490 series × 1,913 validation days**, so the evaluation file is safely used as the canonical observed sales source.
+M5 does **not** provide on-hand inventory, purchase orders, supplier lead times, or lost-sales information. Zero-sales days are therefore not treated as stockouts.
 
 ## Demand segmentation
 
-Each item-store series is classified over the trailing 365 days using **ADI** and **CV²**:
+Trailing 365-day ADI and CV² classify each series:
 
 | Demand pattern | Series | Share |
 |---|---:|---:|
@@ -113,53 +101,58 @@ Each item-store series is classified over the trailing 365 days using **ADI** an
 | Smooth | 2,939 | 9.6% |
 | Erratic | 694 | 2.3% |
 
-The project also applies **ABC revenue segmentation** and **XYZ weekly-demand variability**, giving planners a combined value/volatility view.
+ABC uses trailing estimated revenue; XYZ uses weekly demand variability.
 
 ## Forecast validation
 
-All forecasting tests use time-based holdouts. Statistical challengers are evaluated across three rolling 28-day folds.
+Simple models are evaluated on three chronological 28-day folds. The ML challenger uses one leakage-safe 28-day priority holdout.
 
-For the leakage-safe priority-series holdout:
+| Model | WAPE | MAE | RMSE | Bias |
+|---|---:|---:|---:|---:|
+| **LightGBM** | **45.03%** | **2.50** | **4.26** | **-0.67%** |
+| MA28 | 49.46% | 2.74 | 4.86 | -1.28% |
+| WeekdayAvg8 | 49.54% | 2.75 | 4.78 | -1.06% |
+| SeasonalNaive7 | 56.77% | 3.15 | 5.43 | -6.16% |
 
-| Model | WAPE | RMSE | Bias |
-|---|---:|---:|---:|
-| **LightGBM** | **45.14%** | **4.30** | **-0.86%** |
-| 28-day moving average | 49.46% | 4.86 | -1.25% |
-| 8-week weekday average | 49.53% | 4.78 | -1.07% |
-| 7-day seasonal naive | 56.75% | 5.44 | -6.12% |
+LightGBM improves WAPE by **8.96% relative to MA28** on the priority holdout.
 
-**Result:** the priority LightGBM challenger reduced WAPE by **8.74% relative to the 28-day moving-average baseline**.
-
-The ML feature set includes recent demand lags, rolling demand level/volatility, weekly sell price, price change, weekday/month, event flags, state SNAP indicators, and product/store hierarchy identifiers.
-
-Price preparation is leakage-safe: prices are **forward-filled only** and initial pre-launch missing values are encoded as unavailable rather than backfilled from later weeks. M5-provided future-horizon prices are used only as known planning covariates for the competition horizon.
+The ML feature set includes demand lags, rolling level/volatility, weekly sell price and price change, calendar/event/SNAP fields, and product/store hierarchy identifiers. Price histories are forward-filled only; later prices are never backfilled into earlier weeks.
 
 ## Planner Action Center
 
-The final item-store output translates the forecast into business-facing fields including ABC-XYZ class, demand pattern, trailing revenue, forecast movement, planning-change signal, risk score, scenario stock levels, forecast route, and a planner action recommendation.
+The final item-store table combines value class, volatility, demand pattern, forecast movement, planning-change signal, risk score, forecast route, scenario stock levels, and a planner action.
 
-The **planning change signal** is deliberately separate from forecast accuracy. When an MA28 route mechanically reproduces the latest 28-day total, the action layer falls back to recent run-rate movement. A symmetric zero-baseline fallback keeps new-demand and drop-to-zero cases finite rather than silently turning them into missing values.
+A **risk score ≥ 70** defines the high-risk queue. There are **3,876** such item-store records, representing **16.63%** of trailing-365-day estimated revenue.
 
-The final 28-day planning horizon totals about **1.24 million forecast units** versus **1.23 million units** in the prior 28 days, roughly **+0.9%** at the aggregate level. This is a planning output, not an out-of-sample accuracy claim.
+When an MA28 route mechanically reproduces the previous 28-day total, the planning-change signal uses recent run-rate movement instead of leaving the series structurally flat.
 
-## Inventory-scenario integrity
+## Scenario planning
 
-M5 does not contain observed inventory. To avoid overstating what the public data can support, inventory outputs are explicit scenarios:
+Inventory outputs are scenarios, not observed Walmart inventory.
 
+Default assumptions:
 - lead time: 14 days
 - review period: 7 days
-- A-class service level: 95%
-- B-class service level: 90%
-- C-class service level: 85%
-- demand-volatility lookback: trailing 90 days
+- A / B / C service levels: 95% / 90% / 85%
+- volatility lookback: trailing 90 days
 
-These calculations are decision-support outputs, **not actual Walmart stock or order quantities**.
+Baseline totals:
+- safety stock: **225,815.5 units**
+- reorder point: **847,028.3 units**
+- target stock: **1,157,623.9 units**
 
-## Final validation
+The default scenario reconciles exactly to the stored baseline.
 
-Before the Power BI build, the full project was rerun from the raw M5 ZIP through audit, segmentation, rolling backtests, leakage-safe ML holdout, final model routing, planner scenarios, and Power BI-ready output generation. Code-quality checks include syntax validation and **9 regression/unit tests**.
+## Reproduce
 
-See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage QA report and the issues corrected during final review.
+1. Download the **M5 Forecasting - Accuracy** data.
+2. Put `calendar.csv`, `sales_train_evaluation.csv`, and `sell_prices.csv` in `data/raw/`.
+3. `pip install -r requirements.txt`
+4. `python src/run_pipeline.py`
+5. `python src/priority_model.py`
+6. `python src/final_forecast.py`
+
+Large processed tables are excluded from Git and regenerated from source. GitHub Actions independently rebuilds the analytics and validates the compiled Power BI template.
 
 ## Repository structure
 
@@ -167,42 +160,30 @@ See [`docs/validation_report.md`](docs/validation_report.md) for the three-stage
 .
 ├── .github/workflows/
 ├── assets/
-│   ├── dashboard_01_executive.webp
-│   ├── dashboard_03_merchandise.webp
-│   └── dashboard_04_action_center.webp
-├── data/README.md
+│   ├── merchandise_assortment_planning.webp
+│   └── planner_action_center.webp
+├── data/
 ├── docs/
 ├── outputs/
 ├── powerbi/
 │   ├── README.md
 │   └── Walmart_M5_Demand_Planning_Portfolio.pbit
-├── sql/planner_kpis.sql
+├── sql/
 ├── src/
 ├── tests/
 ├── tools/
 └── requirements.txt
 ```
 
-## Reproduce the analysis
-
-1. Download the **M5 Forecasting - Accuracy** files from Kaggle.
-2. Put `calendar.csv`, `sales_train_evaluation.csv`, and `sell_prices.csv` in `data/raw/`.
-3. Install dependencies: `pip install -r requirements.txt`
-4. Run the core audit / segmentation / backtest pipeline: `python src/run_pipeline.py`
-5. Reproduce the leakage-safe priority-model holdout: `python src/priority_model.py`
-6. Generate the final routed forecast and Power BI-ready planner tables: `python src/final_forecast.py`
-
-The larger `data/processed/` tables are intentionally excluded from Git and can be regenerated from the public source data. The repository also includes the Power BI build tooling used to compile the portfolio `.pbit` from validated outputs.
-
-## Tools demonstrated
+## Stack
 
 **Python:** pandas, NumPy, LightGBM, Numba  
-**Forecasting:** rolling-origin validation, intermittent-demand benchmarking, global ML forecasting  
-**Planning:** ABC-XYZ, ADI/CV² segmentation, service-level scenarios, safety stock / reorder point  
+**Forecasting:** rolling-origin validation, intermittent-demand benchmarks, global ML forecasting  
+**Planning:** ABC-XYZ, ADI/CV², safety stock, reorder point, planner actions  
 **SQL:** planner KPI and action-queue queries  
-**Power BI:** semantic model, DAX measures, interactive filters, scenario controls, executive dashboard design  
-**Engineering:** reproducible scripts, regression tests, GitHub Actions, automated Power BI template build
+**Power BI:** semantic model, DAX, slicers, scenario controls, five-page report  
+**Engineering:** reproducible scripts, tests, GitHub Actions, automated PBIT build
 
-## Notes on responsible interpretation
+## Scope and limitations
 
-This is an independent portfolio analysis using public competition data. It is not affiliated with Walmart and does not represent current Walmart operations. The dataset ends in 2016; the project demonstrates analytical and planning methodology rather than current business performance.
+This is an independent analysis of public competition data. It is not affiliated with Walmart and does not represent current Walmart operations. The dataset ends in 2016. The official M5 competition metric is WRMSSE; WAPE/MAE/RMSE/bias are used here as planner-facing diagnostics, not leaderboard-equivalent scores.

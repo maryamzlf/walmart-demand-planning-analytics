@@ -456,13 +456,12 @@ def validate():
         sels = {x.get('Name') for x in sv.get('prototypeQuery', {}).get('Select', [])}
         assert not [r for r in refs if r not in sels], cfg_path
     assert count == 67, count
-    print('Power BI polish validation passed:', count, 'visuals')
+    print('Power BI report validation passed:', count, 'visuals')
 
 
 if __name__ == '__main__':
     rename_semantic_columns()
     align_scenario_default_baseline()
     polish_report()
-    polish_m_queries()
     fix_measure_formats()
     validate()

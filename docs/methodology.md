@@ -1,90 +1,100 @@
 # Methodology
 
 ## 1. Business objective
-The project converts historical Walmart unit sales, price, calendar, event, and SNAP information into a planner-facing workflow for four questions:
 
+The analysis addresses four planning questions:
 1. What is likely to sell during the next 28 days?
-2. Which item-store combinations deserve the most planning attention?
-3. Which demand patterns require different forecasting approaches?
-4. What inventory coverage would be appropriate under explicit service-level and lead-time scenarios?
+2. Which item-store combinations deserve the most attention?
+3. Which demand patterns need different forecasting approaches?
+4. How do lead time, review period, and service level change inventory coverage scenarios?
 
-The repository deliberately separates **observed Walmart data** from **scenario-based planning outputs**. M5 does not provide on-hand inventory, purchase orders, supplier lead times, or actual Walmart replenishment decisions. Safety stock, reorder point, and target stock are therefore planning scenarios, not claims about Walmart's internal inventory. Zero-sales days are not interpreted as stockouts because the dataset does not provide inventory availability or lost-sales information.
+Observed M5 data and modeled planning outputs are kept separate. M5 does not provide on-hand inventory, purchase orders, supplier lead times, or lost-sales data.
 
-## 2. Data grain and scope
-The bottom-level forecasting grain is **item × store × day**.
+## 2. Data grain and source checks
+
+Forecasting grain: **item × store × day**.
 
 - 30,490 item-store series
-- 3,049 unique items
+- 3,049 items
 - 10 stores
-- 3 states: CA, TX, WI
-- 3 categories and 7 departments
-- 1,941 observed selling days from 2011-01-29 through 2016-05-22
+- 3 states
+- 3 categories / 7 departments
+- 1,941 observed days, 2011-01-29 through 2016-05-22
 
-The evaluation sales file is used as the canonical source because it already contains the full validation history. A full chunkwise equality check confirms that all 30,490 validation series and all `d_1 ... d_1913` values are identical to the corresponding prefix of the evaluation file.
+The evaluation file is the canonical sales history. CI confirms that all 30,490 validation rows and all `d_1 ... d_1913` values exactly match the corresponding prefix of the evaluation file.
+
+Additional checks cover duplicate keys, missing/negative sales, missing/non-positive prices, and duplicate store-item-week price records.
 
 ## 3. Demand segmentation
-A one-model-fits-all approach performs poorly on sparse retail demand, so each item-store series is classified using the last 365 observed days.
 
-Two statistics are calculated:
-- **ADI (Average Demand Interval)** = number of days / number of non-zero demand days
+Each item-store series is classified over the last 365 observed days.
+
+- **ADI** = days / non-zero demand days
 - **CV²** = squared coefficient of variation of non-zero demand sizes
 
 | Segment | ADI | CV² |
 |---|---:|---:|
 | Smooth | < 1.32 | < 0.49 |
-| Intermittent | >= 1.32 | < 0.49 |
-| Erratic | < 1.32 | >= 0.49 |
-| Lumpy | >= 1.32 | >= 0.49 |
+| Intermittent | ≥ 1.32 | < 0.49 |
+| Erratic | < 1.32 | ≥ 0.49 |
+| Lumpy | ≥ 1.32 | ≥ 0.49 |
 
-This dataset is strongly intermittent: roughly 68% of daily item-store observations are zero.
+About 68% of bottom-level daily observations are zero.
 
-## 4. Value and variability segmentation
-### ABC
-Item-store combinations are ranked by trailing-365-day estimated revenue. Cumulative revenue defines A as approximately the first 80%, B as the next 15%, and C as the final 5%.
+## 4. ABC-XYZ
 
-### XYZ
-Weekly demand variability is measured with coefficient of variation: X <= 0.50; Y > 0.50 and <= 1.00; Z > 1.00.
+**ABC:** item-store records are ranked by trailing-365-day estimated revenue. Weekly units are multiplied by that week's sell price. Cumulative revenue defines approximately 80% A, 15% B, and 5% C.
 
-ABC-XYZ is used for prioritization rather than as a forecasting target.
+**XYZ:** weekly demand coefficient of variation defines X ≤ 0.50, Y > 0.50 and ≤ 1.00, Z > 1.00.
 
-## 5. Forecast backtesting
-Forecasts use a 28-day horizon with rolling-origin backtests. Candidates are 7-day seasonal naive, 28-day moving average, 4-week weekday average, 8-week weekday average, 56-day trend, and Croston SBA.
+## 5. Baseline backtests
 
-Across three rolling 28-day folds, the strongest simple rules were:
-- **Smooth:** 8-week weekday average
-- **Intermittent / Erratic / Lumpy:** 28-day moving average
+Forecast horizon: 28 days. Candidate models:
+- SeasonalNaive7
+- MA28
+- WeekdayAvg4
+- WeekdayAvg8
+- Trend56
+- Croston SBA
 
-Croston SBA remains in the benchmark even though it was not selected; model choice is evidence-driven.
+Three chronological rolling folds select:
+- Smooth → **WeekdayAvg8**
+- Intermittent / Erratic / Lumpy → **MA28**
 
-## 6. Priority-series machine learning challenger
-The highest-value 3,000 item-store series receive a global LightGBM challenger. Priority series for the holdout test are selected only from the trailing period available before the holdout, preventing target leakage.
+## 6. Priority LightGBM challenger
 
-Features: 1/7/14/28/56-day lags; 7/28/56-day rolling means; 28-day volatility; current price and 7-day price change; weekday/month/year; event and SNAP indicators; and item/store/department/category/state identifiers.
+The highest-value 3,000 item-store series receive a global LightGBM challenger.
 
-The model uses a Tweedie objective for non-negative, zero-heavy demand.
+For the reported holdout, the priority cohort is determined **before the split** using exact trailing revenue: weekly units × the sell price for that same item-store-week, summed over the trailing 365 days. Holdout sales are never used for cohort selection.
 
-Price handling is explicitly leakage-safe. Weekly prices are forward-filled only; an initial missing price is encoded as `0` (unavailable) rather than backfilled from a later week. For the 28-day future M5 horizon, the competition-provided future weekly prices are treated as known planning covariates.
+Features include 1/7/14/28/56-day lags; 7/28/56-day rolling means; 28-day volatility; weekly sell price and 7-day price change; weekday/month/year; event and SNAP indicators; and hierarchy identifiers.
 
-| Model | WAPE | RMSE | Bias |
-|---|---:|---:|---:|
-| LightGBM | 45.14% | 4.30 | -0.86% |
-| 28-day moving average | 49.46% | 4.86 | -1.25% |
-| 8-week weekday average | 49.53% | 4.78 | -1.07% |
-| 7-day seasonal naive | 56.75% | 5.44 | -6.12% |
+Prices are forward-filled only. Initial pre-launch prices remain unavailable (encoded as 0), rather than being filled from later weeks. Competition-provided prices for the 28-day planning horizon are treated as known covariates.
 
-LightGBM reduced WAPE by **8.74% relative to the 28-day moving-average challenger**.
+| Model | WAPE | MAE | RMSE | Bias |
+|---|---:|---:|---:|---:|
+| LightGBM | **45.03%** | **2.50** | **4.26** | **-0.67%** |
+| MA28 | 49.46% | 2.74 | 4.86 | -1.28% |
+| WeekdayAvg8 | 49.54% | 2.75 | 4.78 | -1.06% |
+| SeasonalNaive7 | 56.77% | 3.15 | 5.43 | -6.16% |
 
-## 7. Forecast routing
-- Top 3,000 priority item-store series: LightGBM
-- Remaining Smooth series: 8-week weekday average
-- Remaining Intermittent, Erratic, and Lumpy series: 28-day moving average
+Relative WAPE improvement vs MA28: **8.96%**.
 
-This concentrates model complexity where it creates the most business value.
+## 7. Final model routing
 
-## 8. Scenario-based inventory planning
-Because M5 contains no on-hand inventory or supplier lead time, the project does not calculate actual order quantities.
+- top 3,000 priority series → LightGBM
+- remaining Smooth → WeekdayAvg8
+- remaining Intermittent / Erratic / Lumpy → MA28
 
-Assumptions: 14-day lead time, 7-day review period, 95% service for A, 90% for B, and 85% for C. Daily demand volatility uses the trailing 90 observed days.
+Final route counts: 3,000 LightGBM; 1,340 WeekdayAvg8; 26,150 MA28.
+
+## 8. Planning scenarios
+
+Default assumptions:
+- 14-day lead time
+- 7-day review period
+- A/B/C service levels: 95% / 90% / 85%
+- trailing-90-day daily demand volatility
 
 `Safety Stock = z × sigma_daily × sqrt(lead_time)`
 
@@ -92,23 +102,16 @@ Assumptions: 14-day lead time, 7-day review period, 95% service for A, 90% for B
 
 `Target Stock = average_daily_forecast × (lead_time + review_period) + safety_stock`
 
-These are decision-support scenarios only.
+These are transparent decision-support scenarios, not actual order quantities.
 
 ## 9. Planner Action Center
-Each item-store record receives a demand-risk score from value class, variability, demand pattern, and a planning-change signal. Ordinary forecast growth is retained when informative. When a forecast is mechanically flat (notably the MA28 route), the signal uses recent 28-day run-rate movement instead. A symmetric-change fallback keeps zero-baseline activations and drop-to-zero cases finite rather than silently turning them into missing values.
 
-Rule-based actions direct attention toward high-value growth, potential excess exposure, volatile/lumpy demand, and long-tail inventory risk. This turns forecast output into a planning workflow rather than stopping at prediction accuracy.
+Risk combines ABC value, XYZ variability, demand pattern, and a planning-change signal. **Risk ≥ 70** is the report's high-risk threshold.
 
-## 10. Reproducibility
-The scripts regenerate the portfolio evidence files:
-- `backtest.py` writes both fold-level results and `outputs/baseline_model_summary.csv`.
-- `priority_model.py` writes holdout metrics and feature importance.
-- `final_forecast.py` writes the Power BI-ready large tables plus `outputs/segment_summary.csv` and `outputs/planner_action_sample.csv`.
+Forecast growth is used when informative. If a route is mechanically flat (especially MA28), recent 28-day run-rate movement is used instead. A symmetric fallback handles zero-baseline activations and drop-to-zero cases without infinite growth rates.
 
-Raw and large processed data remain excluded from Git and are regenerated from the public M5 source files.
+## 10. Evaluation scope
 
+The official M5 competition uses WRMSSE. This project uses WAPE, MAE, RMSE, and aggregate bias because they are easier to interpret in a planning workflow. They are not presented as leaderboard-equivalent scores.
 
-## Evaluation metric choice
-The official M5 competition uses WRMSSE. This project does not present its WAPE results as leaderboard-equivalent scores. WAPE, MAE, RMSE, and aggregate bias are used here because the objective is a planner-facing demand workflow with interpretable unit and directional error measures rather than competition ranking.
-
-For intermittent and lumpy demand, the normal-theory safety-stock formula is a transparent planning approximation, not a guaranteed service-level model.
+The LightGBM result is one leakage-safe 28-day priority holdout; the baseline router uses three rolling folds. A production implementation should add more rolling ML holdouts and monitoring.

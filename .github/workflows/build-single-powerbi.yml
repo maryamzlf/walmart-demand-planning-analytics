@@ -139,9 +139,12 @@ jobs:
           priority = pd.read_csv('outputs/priority_model_holdout.csv').set_index('model')
           for metric in ['wape','mae','rmse','bias_pct']:
               assert np.isfinite(pd.to_numeric(priority[metric], errors='coerce')).all(), metric
-          assert float(priority.loc['LightGBM','wape']) < float(priority.loc['MA28','wape'])
+          assert abs(float(priority.loc['LightGBM','wape']) - 0.4502711892127991) < 1e-12
+          assert abs(float(priority.loc['LightGBM','mae']) - 2.4971020221710205) < 1e-12
+          assert abs(float(priority.loc['LightGBM','rmse']) - 4.259788513183594) < 1e-12
+          assert abs(float(priority.loc['LightGBM','bias_pct']) - (-0.006737446878105402)) < 1e-12
           rel_improvement = (float(priority.loc['MA28','wape']) - float(priority.loc['LightGBM','wape'])) / float(priority.loc['MA28','wape'])
-          assert rel_improvement > 0
+          assert abs(rel_improvement - 0.08957082556795339) < 1e-12
           baseline = pd.read_csv('outputs/baseline_model_summary.csv')
           best = baseline.loc[baseline.groupby('segment')['avg_wape'].idxmin(), ['segment','model']]
           best_routes = dict(zip(best['segment'], best['model']))
@@ -180,10 +183,10 @@ jobs:
 
       - name: Generate pbi-tools PbixProj source
         run: |
-          gzip -dc tools/build_real_pbit_source.py.gz > /tmp/build_real_pbit_source.py
-          sed -i "s#ROOT/'build'/'walmart_pbit_source_qa.json'.write_text#(ROOT/'build'/'walmart_pbit_source_qa.json').write_text#" /tmp/build_real_pbit_source.py
-          sed -i 's/60000/12000/g' /tmp/build_real_pbit_source.py
-          python /tmp/build_real_pbit_source.py
+          gzip -dc tools/build_powerbi_source.py.gz > /tmp/build_powerbi_source.py
+          sed -i "s#ROOT/'build'/'walmart_pbit_source_qa.json'.write_text#(ROOT/'build'/'walmart_pbit_source_qa.json').write_text#" /tmp/build_powerbi_source.py
+          sed -i 's/60000/12000/g' /tmp/build_powerbi_source.py
+          python /tmp/build_powerbi_source.py
           cat build/walmart_pbit_source_qa.json
 
       - name: Fix generated Power Query M syntax
@@ -206,8 +209,8 @@ jobs:
           print('Validated Power BI Enter Data M syntax for', len(files), 'queries')
           PY
 
-      - name: Apply portfolio polish
-        run: python tools/polish_powerbi_project.py build/walmart_pbit_pbixproj
+      - name: Apply report formatting
+        run: python tools/format_powerbi_report.py build/walmart_pbit_pbixproj
 
       - name: Validate generated M source
         run: |
@@ -241,7 +244,7 @@ jobs:
           echo "$TOOL" > /tmp/pbi-tools-path
           "$TOOL" info
 
-      - name: Compile real PBIT
+      - name: Compile Power BI template
         run: |
           TOOL="$(cat /tmp/pbi-tools-path)"
           "$TOOL" compile build/walmart_pbit_pbixproj build/Walmart_M5_Demand_Planning.pbit PBIT true
@@ -494,7 +497,7 @@ jobs:
                   'FeatureImportance.Feature Importance Share'
               ], feature_refs
 
-              print('VALIDATED POLISHED PBIT:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line, '; revenue', planner_revenue, '; forecast', planner_forecast)
+              print('VALIDATED POWER BI TEMPLATE:', p.stat().st_size, 'bytes;', len(tables), 'tables;', len(sections), 'pages;', visuals, 'visuals; max M line', max_m_line, '; revenue', planner_revenue, '; forecast', planner_forecast)
           PY
 
       - name: Commit generated Power BI portfolio template
@@ -510,7 +513,8 @@ jobs:
             outputs/priority_model_holdout.json \
             outputs/priority_feature_importance.csv \
             outputs/segment_summary.csv \
-            outputs/planner_action_sample.csv
+            outputs/planner_action_sample.csv \
+            outputs/executive_findings.md
           if git diff --cached --quiet; then
             echo "Power BI template already up to date."
           else
@@ -540,5 +544,6 @@ jobs:
             outputs/priority_feature_importance.csv
             outputs/segment_summary.csv
             outputs/planner_action_sample.csv
+            outputs/executive_findings.md
           retention-days: 90
           if-no-files-found: error
