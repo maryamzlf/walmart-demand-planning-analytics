@@ -53,4 +53,4 @@ A visible interpretation note should accompany portfolio discussion: these are p
 
 - Model-diagnostic tables on **Demand Forecast & Model Performance** are intentionally disconnected from merchandise slicers. Holdout/backtest metrics are fixed validation summaries; slicers affect the routed weekly forecast through the PlannerActionCenter → ForecastWeekly relationship.
 - The default Scenario Planning state (14-day lead time, 7-day review period, ABC service levels) must equal the stored baseline exactly. Therefore the default **Target Stock Change (Units)** and **Target Stock Change %** are 0.
-- Planner queues are sorted by **Risk Score descending**, then **Revenue descending** to make ties deterministic and business-prioritized.
+- The Executive Overview queue is sorted by **Risk Score descending**. The detailed Planner Action Center and Merchandise Priority tables add **Revenue descending** as the secondary sort to make ties deterministic and business-prioritized.
