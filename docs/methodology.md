@@ -65,6 +65,8 @@ Three chronological rolling folds select:
 
 The highest-value 3,000 item-store series receive a global LightGBM challenger.
 
+Each holdout/final fit uses the most recent **463 target days** before its cutoff (about 15 months) so the global training set remains computationally bounded and the training depth is identical across the two fits. Lag features can draw on earlier history.
+
 For the reported holdout, the priority cohort is determined **before the split** using exact trailing revenue: weekly units × the sell price for that same item-store-week, summed over the trailing 365 days. Holdout sales are never used for cohort selection.
 
 Features include 1/7/14/28/56-day lags; 7/28/56-day rolling means; 28-day volatility; weekly sell price and 7-day price change; weekday/month/year; event and SNAP indicators; and hierarchy identifiers. Price change is calculated only when both the current and lagged prices are observed; unavailable-price transitions are not treated as extreme price moves.
@@ -73,12 +75,12 @@ Prices are forward-filled only. Initial pre-launch prices remain unavailable (en
 
 | Model | WAPE | MAE | RMSE | Bias |
 |---|---:|---:|---:|---:|
-| LightGBM | **45.03%** | **2.50** | **4.26** | **-0.67%** |
+| LightGBM | **45.38%** | **2.52** | **4.34** | **-1.46%** |
 | MA28 | 49.46% | 2.74 | 4.86 | -1.28% |
 | WeekdayAvg8 | 49.54% | 2.75 | 4.78 | -1.06% |
 | SeasonalNaive7 | 56.77% | 3.15 | 5.43 | -6.16% |
 
-Relative WAPE improvement vs MA28: **8.96%**.
+Relative WAPE improvement vs MA28: **8.25%**.
 
 ## 7. Final model routing
 
