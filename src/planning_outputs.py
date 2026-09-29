@@ -9,7 +9,7 @@ def _safe_change(current, reference):
     """Percent change with an explicit zero-base policy.
 
     A zero reference is left undefined rather than reported as an infinite
-    growth rate. The action engine uses the absolute unit change as a fallback.
+    growth rate. The planning signal applies a finite symmetric-change fallback.
     """
     current = np.asarray(current, dtype=float)
     reference = np.asarray(reference, dtype=float)
@@ -117,11 +117,10 @@ def add_planning_scenarios(
 
     actions = []
     signal = np.nan_to_num(planning_change, nan=0, posinf=2, neginf=-2)
-    for a, x, s, g, unit_delta in zip(
-        out.abc_class, out.xyz_class, out.demand_segment, signal, forecast_unit_change
+    for a, x, s, g in zip(
+        out.abc_class, out.xyz_class, out.demand_segment, signal
     ):
-        zero_base_growth = g == 0 and unit_delta > 0
-        if a == "A" and (g > 0.20 or zero_base_growth):
+        if a == "A" and g > 0.20:
             actions.append("Protect availability; validate supply and raise coverage")
         elif a == "A" and g < -0.20:
             actions.append("Review excess-risk exposure before replenishment")
