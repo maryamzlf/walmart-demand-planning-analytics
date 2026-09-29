@@ -17,7 +17,9 @@ def generate_final_forecast(raw_dir="data/raw", processed_dir="data/processed",
 
     seg_path = processed_dir / "segmentation.csv"
     segmentation = pd.read_csv(seg_path) if seg_path.exists() else build_segmentation(raw_dir, seg_path)
-    priority_idx = segmentation.nlargest(n_priority, "revenue_365d").index.to_numpy()
+    revenue_rank = segmentation["revenue_365d"].to_numpy(dtype=np.float64)
+    series_id = segmentation["id"].astype(str).to_numpy()
+    priority_idx = np.lexsort((series_id, -revenue_rank))[:n_priority]
 
     forecast = forecast_moving_average(arr, 28, horizon)
     smooth = segmentation.demand_segment.eq("Smooth").to_numpy()
