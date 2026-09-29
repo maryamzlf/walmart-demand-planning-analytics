@@ -5,9 +5,9 @@
 
 ## Current status
 
-**PENDING CURRENT-HEAD PBIT PUBLISH**
+**PASS — CURRENT PBIT PUBLISHED AND VALIDATED**
 
-The analytical pipeline, reported metrics, and Power BI build were reviewed in three separate passes. A stale repository copy of the PBIT was identified during this review; the current workflow rebuild is being used to replace it with the version validated against the metrics below.
+The analytical pipeline, reported metrics, and Power BI build were reviewed in three separate passes. A stale repository copy of the PBIT was identified and replaced with a fresh build validated against the metrics below.
 
 ## Pass 1 — Data integrity, leakage, and reproducibility
 
@@ -87,9 +87,9 @@ The four weekly forecast rows per item-store reconcile to the 28-day forecast wi
 
 ## Pass 3 — Power BI and presentation consistency
 
-**Status: PASS FOR BUILD; REPOSITORY PUBLISH IN PROGRESS**
+**Status: PASS**
 
-The current-head Power BI build completed compilation and package validation successfully before the repository publish step:
+The current-head Power BI build completed compilation, package validation, repository publication, and artifact upload successfully:
 
 - **8 tables**
 - **1 active relationship**
@@ -104,16 +104,24 @@ The current-head Power BI build completed compilation and package validation suc
 - embedded planner revenue: **$45,163,441.24**
 - embedded 28-day forecast: **1,246,980.1 units**
 
-The previous PBIT in the repository contained an earlier validated run and therefore did not match the current analytical evidence. It is being replaced rather than retained. Older dashboard screenshots with superseded KPI values are also excluded from the canonical report.
+The previous PBIT in the repository contained an earlier validated run and therefore did not match the current analytical evidence. It was replaced. Older dashboard screenshots with superseded KPI values are excluded from the canonical report.
 
-## AI / presentation review
+## Presentation-language review
 
-No public-facing file contains ChatGPT/OpenAI attribution, AI-generation claims, prompt text, or assistant-style meta commentary. Wording in the README and documentation was reviewed for concrete analytical language rather than generic promotional language.
+No public-facing documentation contains prompt text, assistant-style meta commentary, or generation claims. README and documentation wording was reviewed for specific analytical language rather than generic promotional language.
 
-Technical terms such as **leakage control**, **rolling holdout**, **ABC-XYZ**, **ADI/CV²**, **WAPE**, and **scenario planning** are retained because they describe the actual methodology.
+Technical terms such as **leakage control**, **rolling holdout**, **ABC-XYZ**, **ADI/CV²**, **WAPE**, and **scenario planning** are retained because they describe the methodology.
 
 ## Interpretation boundary
 
 M5 does not provide observed on-hand inventory, open purchase orders, supplier lead times, lost sales, or Walmart's actual replenishment decisions. Inventory quantities in this project are planning scenarios, not statements about Walmart's real inventory policy.
 
 The official M5 competition metric is WRMSSE. This project uses WAPE, MAE, RMSE, and bias as planner-facing diagnostics and does not present them as leaderboard-equivalent scores.
+
+
+## Final build evidence
+
+- GitHub Actions build run: **36620592616 — success**
+- Published PBIT blob: **cd3732048d4262fc3340018b8f94347a0bf20a7e**
+- Published PBIT size: **3,857,605 bytes**
+- Code-quality run on the reviewed source commit: **36620592519 — success**
