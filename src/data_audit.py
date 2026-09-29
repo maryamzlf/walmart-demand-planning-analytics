@@ -20,8 +20,15 @@ def run_audit(raw_dir="data/raw", output_path="outputs/data_audit.json"):
         "zero_share": float((arr == 0).mean()),
         "negative_sales_count": int((arr < 0).sum()),
         "missing_sales_count": int(np.isnan(arr).sum()),
+        "duplicate_series_id_count": int(sales["id"].duplicated().sum()),
+        "duplicate_calendar_day_count": int(calendar["d"].duplicated().sum()),
+        "missing_calendar_day_count": int(len(set(dcols) - set(calendar["d"]))),
         "price_rows": int(len(prices)),
         "missing_price_count": int(prices.sell_price.isna().sum()),
+        "nonpositive_price_count": int((prices.sell_price <= 0).sum()),
+        "duplicate_price_key_count": int(
+            prices.duplicated(["store_id", "item_id", "wm_yr_wk"]).sum()
+        ),
         "price_min": float(prices.sell_price.min()),
         "price_max": float(prices.sell_price.max()),
         "start_date": str(calendar.loc[calendar.d == dcols[0], "date"].iloc[0]),

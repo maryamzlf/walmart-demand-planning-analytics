@@ -14,17 +14,35 @@ CATEGORICAL = ["item_code","store_code","dept_code","cat_code","state_code"]
 
 
 def _priority_indices_pre_holdout(sales, calendar, prices, arr, dcols, train_end=1913, n_priority=3000):
+    """Rank priority series by exact trailing revenue available before the holdout."""
     start = train_end - 365
-    units = arr[:, start:train_end].sum(axis=1)
-    weeks = pd.unique(calendar.set_index("d").loc[dcols[start:train_end], "wm_yr_wk"])
-    avg_price = prices[prices.wm_yr_wk.isin(weeks)].groupby(["item_id","store_id"]).sell_price.mean()
-    keys = pd.MultiIndex.from_frame(sales[["item_id","store_id"]])
-    # Leakage-safe: priority ranking uses only prices available before the holdout.
-    # A missing pre-holdout price is treated as unavailable rather than filled
-    # from later weeks.
-    p = avg_price.reindex(keys).fillna(0.0).to_numpy()
-    revenue_proxy = units * p
-    return np.argsort(-revenue_proxy)[:n_priority]
+    recent = arr[:, start:train_end]
+    recent_d = dcols[start:train_end]
+    day_weeks = calendar.set_index("d").loc[recent_d, "wm_yr_wk"].to_numpy()
+    unique_weeks = pd.unique(day_weeks)
+
+    weekly_units = np.zeros((len(sales), len(unique_weeks)), dtype=np.float32)
+    for j, week in enumerate(unique_weeks):
+        weekly_units[:, j] = recent[:, day_weeks == week].sum(axis=1)
+
+    price_recent = prices[prices.wm_yr_wk.isin(unique_weeks)]
+    pivot = price_recent.pivot_table(
+        index=["item_id", "store_id"],
+        columns="wm_yr_wk",
+        values="sell_price",
+        aggfunc="last",
+    )
+    keys = pd.MultiIndex.from_frame(sales[["item_id", "store_id"]])
+    # Use only prices observed by the split date. Forward-fill is allowed within
+    # the pre-holdout window; initial pre-launch weeks remain unavailable.
+    price_matrix = (
+        pivot.reindex(index=keys, columns=unique_weeks)
+        .ffill(axis=1)
+        .fillna(0.0)
+        .to_numpy(dtype=np.float32)
+    )
+    revenue = (weekly_units * price_matrix).sum(axis=1)
+    return np.argsort(-revenue)[:n_priority]
 
 
 def _prepare_subset(indices, sales, calendar, prices, arr, max_day=1969):
