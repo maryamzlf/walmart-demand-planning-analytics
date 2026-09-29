@@ -42,6 +42,17 @@ def build_segmentation(raw_dir="data/raw", output_path="data/processed/segmentat
     for j, week in enumerate(unique_weeks):
         weekly_units[:, j] = recent[:, np.where(weeks == week)[0]].sum(axis=1, dtype=np.float64)
 
+    # Revenue uses every day in the trailing 365-day window. XYZ variability,
+    # however, should compare like-for-like business weeks, so incomplete edge
+    # weeks are excluded rather than treated as artificially low-demand weeks.
+    week_counts = pd.Series(weeks).value_counts()
+    full_weeks = [week for week in unique_weeks if int(week_counts.loc[week]) == 7]
+    if len(full_weeks) < 50:
+        raise ValueError(f"Expected at least 50 complete weeks for XYZ, found {len(full_weeks)}")
+    full_week_units = np.zeros((len(sales), len(full_weeks)), dtype=np.float64)
+    for j, week in enumerate(full_weeks):
+        full_week_units[:, j] = recent[:, np.where(weeks == week)[0]].sum(axis=1, dtype=np.float64)
+
     price_recent = prices[prices.wm_yr_wk.isin(unique_weeks)]
     pivot = price_recent.pivot_table(index=["item_id", "store_id"], columns="wm_yr_wk", values="sell_price", aggfunc="last")
     item_store = pd.MultiIndex.from_frame(sales[["item_id", "store_id"]])
@@ -62,14 +73,14 @@ def build_segmentation(raw_dir="data/raw", output_path="data/processed/segmentat
     abc[order[cumulative <= 0.80]] = "A"
     abc[order[(cumulative > 0.80) & (cumulative <= 0.95)]] = "B"
 
-    weekly_mean = weekly_units.mean(axis=1)
-    weekly_std = weekly_units.std(axis=1, ddof=1)
+    weekly_mean = full_week_units.mean(axis=1)
+    weekly_std = full_week_units.std(axis=1, ddof=1)
     weekly_cv = np.divide(weekly_std, weekly_mean, out=np.full_like(weekly_std, np.inf), where=weekly_mean > 0)
     xyz = np.where(weekly_cv <= 0.5, "X", np.where(weekly_cv <= 1.0, "Y", "Z"))
 
     out = sales[["id", "item_id", "dept_id", "cat_id", "store_id", "state_id"]].copy()
     out["units_365d"] = units.astype(int)
-    out["revenue_365d"] = np.round(revenue, 2)
+    out["revenue_365d"] = revenue
     out["active_days_365d"] = active.astype(int)
     out["zero_share_365d"] = np.round(zero_share, 4)
     out["adi"] = np.round(adi, 3)
