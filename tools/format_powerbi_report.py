@@ -316,20 +316,6 @@ def polish_report():
         dump_json(cfg_path, cfg)
 
 
-def polish_m_queries():
-    p = ROOT / 'Model' / 'queries' / 'FeatureImportance.m'
-    if p.exists():
-        text = p.read_text(encoding='utf-8')
-        if '#"Top 8"' not in text:
-            text = text.replace(
-                '    #"Changed Type" = Table.TransformColumnTypes(Source, {{"feature", Text.Type}, {"importance_gain", Double.Type}, {"share", Double.Type}})\nin\n    #"Changed Type"',
-                '    #"Changed Type" = Table.TransformColumnTypes(Source, {{"feature", Text.Type}, {"importance_gain", Double.Type}, {"share", Double.Type}}),\n'
-                '    #"Sorted Rows" = Table.Sort(#"Changed Type", {{"share", Order.Descending}}),\n'
-                '    #"Top 8" = Table.FirstN(#"Sorted Rows", 8)\nin\n    #"Top 8"'
-            )
-        p.write_text(text, encoding='utf-8')
-
-
 
 def align_scenario_default_baseline():
     """Keep the unfiltered/default scenario numerically identical to the stored baseline.
