@@ -17,16 +17,6 @@ Report pages:
 4. **Planner Action Center** — ranked item-store actions using value, volatility, demand movement, and risk.
 5. **Scenario Planning** — lead-time, review-period, and service-level what-if analysis for safety stock, reorder point, and target stock.
 
-### Selected dashboard views
-
-These captures contain KPIs that are unchanged by the final model-validation pass. The downloadable `.pbit` is the source of truth for all five interactive pages.
-
-#### Merchandise & Assortment Planning
-![Merchandise & Assortment Planning](assets/merchandise_assortment_planning.webp)
-
-#### Planner Action Center
-![Planner Action Center](assets/planner_action_center.webp)
-
 ## Key results
 
 | Area | Result |
@@ -160,8 +150,6 @@ Large processed tables are excluded from Git and regenerated from source. GitHub
 .
 ├── .github/workflows/
 ├── assets/
-│   ├── merchandise_assortment_planning.webp
-│   └── planner_action_center.webp
 ├── data/
 ├── docs/
 ├── outputs/
