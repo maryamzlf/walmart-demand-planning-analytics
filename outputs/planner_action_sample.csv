@@ -1,16 +1,17 @@
 item_id,store_id,dept_id,cat_id,abc_xyz,demand_segment,revenue_365d,preceding_28d_units,prior_28d_units,forecast_28d_units,forecast_growth_pct,recent_run_rate_change_pct,planning_change_signal_pct,demand_risk_score,safety_stock_scenario_units,reorder_point_scenario_units,forecast_model_route,planner_action
-FOODS_3_441,CA_3,FOODS_3,FOODS,AZ,Lumpy,6290.86,0,0,79.8,,,200.0,100.0,0.0,39.9,LightGBM,Protect availability; validate supply and raise coverage
-FOODS_3_404,CA_3,FOODS_3,FOODS,AZ,Lumpy,5005.6,48,2,202.5,10023.2,-95.8,10023.2,100.0,43.0,144.3,LightGBM,Protect availability; validate supply and raise coverage
-HOUSEHOLD_1_427,WI_2,HOUSEHOLD_1,HOUSEHOLD,AZ,Lumpy,4744.16,0,0,38.7,,,200.0,100.0,39.4,58.8,LightGBM,Protect availability; validate supply and raise coverage
-FOODS_3_764,CA_2,FOODS_3,FOODS,AZ,Lumpy,4629.1,239,103,188.8,83.3,-56.9,83.3,100.0,31.9,126.3,LightGBM,Protect availability; validate supply and raise coverage
-HOUSEHOLD_1_356,WI_2,HOUSEHOLD_1,HOUSEHOLD,AZ,Lumpy,4237.56,0,0,54.1,,,200.0,100.0,33.9,61.0,LightGBM,Protect availability; validate supply and raise coverage
-FOODS_3_524,CA_3,FOODS_3,FOODS,AZ,Lumpy,3534.92,13,0,190.1,,-100.0,200.0,100.0,32.0,127.0,LightGBM,Protect availability; validate supply and raise coverage
-FOODS_3_073,CA_1,FOODS_3,FOODS,AZ,Lumpy,3179.56,0,0,93.9,,,200.0,100.0,12.7,59.6,LightGBM,Protect availability; validate supply and raise coverage
-FOODS_3_808,TX_1,FOODS_3,FOODS,AZ,Lumpy,3027.06,6,0,0.0,,-100.0,-200.0,100.0,18.5,18.5,MA28,Review excess-risk exposure before replenishment
+FOODS_3_444,CA_3,FOODS_3,FOODS,AZ,Lumpy,10105.9,0,281,506.1,80.1,,80.1,100.0,40.2,293.2,LightGBM,Protect availability; validate supply and raise coverage
+FOODS_3_441,CA_3,FOODS_3,FOODS,AZ,Lumpy,6290.860000000001,0,0,157.1,,,200.0,100.0,0.0,78.5,LightGBM,Protect availability; validate supply and raise coverage
+FOODS_3_404,CA_3,FOODS_3,FOODS,AZ,Lumpy,5005.6,48,2,191.2,9461.0,-95.8,9461.0,100.0,43.0,138.7,LightGBM,Protect availability; validate supply and raise coverage
+HOUSEHOLD_1_427,WI_2,HOUSEHOLD_1,HOUSEHOLD,AZ,Lumpy,4744.16,0,0,50.0,,,200.0,100.0,39.4,64.5,LightGBM,Protect availability; validate supply and raise coverage
+FOODS_3_764,CA_2,FOODS_3,FOODS,AZ,Lumpy,4629.100000000001,239,103,188.0,82.5,-56.9,82.5,100.0,31.9,125.9,LightGBM,Protect availability; validate supply and raise coverage
+HOUSEHOLD_1_356,WI_2,HOUSEHOLD_1,HOUSEHOLD,AZ,Lumpy,4237.56,0,0,62.1,,,200.0,100.0,33.9,65.0,LightGBM,Protect availability; validate supply and raise coverage
+FOODS_3_524,CA_3,FOODS_3,FOODS,AZ,Lumpy,3534.92,13,0,294.2,,-100.0,200.0,100.0,32.0,179.0,LightGBM,Protect availability; validate supply and raise coverage
+FOODS_3_073,CA_1,FOODS_3,FOODS,AZ,Lumpy,3179.5600000000004,0,0,64.2,,,200.0,100.0,12.7,44.8,LightGBM,Protect availability; validate supply and raise coverage
+FOODS_3_808,TX_1,FOODS_3,FOODS,AZ,Lumpy,3027.0599999999995,6,0,0.0,,-100.0,-200.0,100.0,18.5,18.5,MA28,Review excess-risk exposure before replenishment
 FOODS_3_808,TX_2,FOODS_3,FOODS,AZ,Lumpy,2935.96,27,0,0.0,,-100.0,-200.0,100.0,29.0,29.0,MA28,Review excess-risk exposure before replenishment
-FOODS_3_069,WI_2,FOODS_3,FOODS,AZ,Lumpy,2831.0,26,62,62.0,0.0,138.5,81.8,100.0,11.7,42.7,MA28,Protect availability; validate supply and raise coverage
+FOODS_3_069,WI_2,FOODS_3,FOODS,AZ,Lumpy,2830.9999999999995,26,62,62.0,0.0,138.5,81.8,100.0,11.7,42.7,MA28,Protect availability; validate supply and raise coverage
 FOODS_3_319,WI_3,FOODS_3,FOODS,AZ,Lumpy,2766.42,45,0,0.0,,-100.0,-200.0,100.0,35.0,35.0,MA28,Review excess-risk exposure before replenishment
-FOODS_3_767,CA_3,FOODS_3,FOODS,AZ,Lumpy,2592.52,17,1,1.0,0.0,-94.1,-177.8,100.0,22.0,22.5,MA28,Review excess-risk exposure before replenishment
+FOODS_3_767,CA_3,FOODS_3,FOODS,AZ,Lumpy,2592.5200000000004,17,1,1.0,0.0,-94.1,-177.8,100.0,22.0,22.5,MA28,Review excess-risk exposure before replenishment
 HOUSEHOLD_1_436,CA_3,HOUSEHOLD_1,HOUSEHOLD,AZ,Lumpy,2582.2,0,17,17.0,0.0,,200.0,100.0,3.9,12.4,MA28,Protect availability; validate supply and raise coverage
 FOODS_3_368,WI_2,FOODS_3,FOODS,AZ,Lumpy,2475.72,23,104,104.0,0.0,352.2,127.6,100.0,15.0,67.0,MA28,Protect availability; validate supply and raise coverage
 FOODS_1_058,CA_3,FOODS_1,FOODS,AZ,Lumpy,2401.0,0,187,187.0,0.0,,200.0,100.0,30.4,123.9,MA28,Protect availability; validate supply and raise coverage
@@ -18,4 +19,3 @@ FOODS_3_808,CA_1,FOODS_3,FOODS,AZ,Lumpy,2395.0,39,0,0.0,,-100.0,-200.0,100.0,18.
 FOODS_3_578,TX_2,FOODS_3,FOODS,AZ,Lumpy,2340.69,15,66,66.0,0.0,340.0,125.9,100.0,9.6,42.6,MA28,Protect availability; validate supply and raise coverage
 FOODS_3_541,TX_1,FOODS_3,FOODS,AZ,Lumpy,2216.28,16,0,0.0,,-100.0,-200.0,100.0,18.2,18.2,MA28,Review excess-risk exposure before replenishment
 FOODS_1_088,CA_1,FOODS_1,FOODS,AZ,Lumpy,2185.92,32,112,112.0,0.0,250.0,111.1,100.0,50.2,106.2,MA28,Protect availability; validate supply and raise coverage
-FOODS_3_635,TX_1,FOODS_3,FOODS,AZ,Lumpy,2173.04,28,0,0.0,,-100.0,-200.0,100.0,18.4,18.4,MA28,Review excess-risk exposure before replenishment
