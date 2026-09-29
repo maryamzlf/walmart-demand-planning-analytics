@@ -418,20 +418,29 @@ IF (
 
 def fix_measure_formats():
     fixes = {
-        'Scenario Safety Stock Delta.xml': '#,##0;-#,##0;0',
-        'Scenario Target Stock Delta.xml': '#,##0;-#,##0;0',
-        'Scenario Target Stock Delta %.xml': '0.0%;-0.0%;0.0%',
+        'PlannerActionCenter': {
+            'Scenario Safety Stock Delta.xml': '#,##0;-#,##0;0',
+            'Scenario Target Stock Delta.xml': '#,##0;-#,##0;0',
+            'Scenario Target Stock Delta %.xml': '0.0%;-0.0%;0.0%',
+        },
+        'PriorityModelHoldout': {
+            'Priority LightGBM WAPE.xml': '0.00%',
+            'Priority WAPE Improvement %.xml': '0.00%',
+            'Priority LightGBM Bias %.xml': '0.00%;-0.00%;0.00%',
+        },
     }
-    mdir = ROOT / 'Model' / 'tables' / 'PlannerActionCenter' / 'measures'
-    for name, fmt in fixes.items():
-        p = mdir / name
-        if not p.exists(): continue
-        text = p.read_text(encoding='utf-8')
-        if '<FormatString>' in text:
-            text = re.sub(r'<FormatString>.*?</FormatString>', f'<FormatString>{fmt}</FormatString>', text, flags=re.S)
-        else:
-            text = text.replace('</Measure>', f'  <FormatString>{fmt}</FormatString>\n</Measure>')
-        p.write_text(text, encoding='utf-8')
+    for table, table_fixes in fixes.items():
+        mdir = ROOT / 'Model' / 'tables' / table / 'measures'
+        for name, fmt in table_fixes.items():
+            p = mdir / name
+            if not p.exists():
+                continue
+            text = p.read_text(encoding='utf-8')
+            if '<FormatString>' in text:
+                text = re.sub(r'<FormatString>.*?</FormatString>', f'<FormatString>{fmt}</FormatString>', text, flags=re.S)
+            else:
+                text = text.replace('</Measure>', f'  <FormatString>{fmt}</FormatString>\n</Measure>')
+            p.write_text(text, encoding='utf-8')
 
 
 def validate():
