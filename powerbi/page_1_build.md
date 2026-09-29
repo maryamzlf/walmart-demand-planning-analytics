@@ -20,7 +20,7 @@ State, Store, Category, Department, ABC Class, Demand Pattern.
 - **ABC-XYZ Portfolio Matrix** — Revenue 365D and Item-Store Count by ABC/XYZ class.
 - **Planner Action Queue** — Item, Store, ABC-XYZ, Demand Pattern, Risk Score, Planner Action.
 
-The action queue is sorted by Risk Score descending and Revenue descending.
+The executive action queue is sorted by Risk Score descending. The detailed Planner Action Center and Merchandise Priority tables use Risk Score descending with Revenue as the secondary sort.
 
 ## Interpretation
 Inventory quantities elsewhere in the report are scenario-based decision-support calculations. M5 does not provide observed on-hand inventory, purchase orders, or vendor lead times.
