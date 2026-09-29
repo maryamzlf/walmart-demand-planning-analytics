@@ -133,9 +133,13 @@ jobs:
           assert decline_review == 4358, decline_review
           avg_risk = float(planner['demand_risk_score'].mean())
           assert round(avg_risk, 1) == 56.3, avg_risk
-          assert abs(float(planner['safety_stock_scenario_units'].sum()) - 225815.5) < 0.2
-          assert abs(float(planner['reorder_point_scenario_units'].sum()) - 847028.3) < 0.2
-          assert abs(float(planner['target_stock_scenario_units'].sum()) - 1157623.9) < 0.2
+          safety_total = float(planner['safety_stock_scenario_units'].sum())
+          reorder_total = float(planner['reorder_point_scenario_units'].sum())
+          target_total = float(planner['target_stock_scenario_units'].sum())
+          print('Scenario totals before regression assertions:', safety_total, reorder_total, target_total)
+          assert abs(safety_total - 225815.5) < 0.2, safety_total
+          assert abs(reorder_total - 847028.3) < 0.2, reorder_total
+          assert abs(target_total - 1157623.9) < 0.2, target_total
           priority = pd.read_csv('outputs/priority_model_holdout.csv').set_index('model')
           for metric in ['wape','mae','rmse','bias_pct']:
               assert np.isfinite(pd.to_numeric(priority[metric], errors='coerce')).all(), metric
