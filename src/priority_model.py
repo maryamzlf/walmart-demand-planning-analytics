@@ -21,9 +21,9 @@ def _priority_indices_pre_holdout(sales, calendar, prices, arr, dcols, train_end
     day_weeks = calendar.set_index("d").loc[recent_d, "wm_yr_wk"].to_numpy()
     unique_weeks = pd.unique(day_weeks)
 
-    weekly_units = np.zeros((len(sales), len(unique_weeks)), dtype=np.float32)
+    weekly_units = np.zeros((len(sales), len(unique_weeks)), dtype=np.float64)
     for j, week in enumerate(unique_weeks):
-        weekly_units[:, j] = recent[:, day_weeks == week].sum(axis=1)
+        weekly_units[:, j] = recent[:, day_weeks == week].sum(axis=1, dtype=np.float64)
 
     price_recent = prices[prices.wm_yr_wk.isin(unique_weeks)]
     pivot = price_recent.pivot_table(
@@ -39,10 +39,12 @@ def _priority_indices_pre_holdout(sales, calendar, prices, arr, dcols, train_end
         pivot.reindex(index=keys, columns=unique_weeks)
         .ffill(axis=1)
         .fillna(0.0)
-        .to_numpy(dtype=np.float32)
+        .to_numpy(dtype=np.float64)
     )
-    revenue = (weekly_units * price_matrix).sum(axis=1)
-    return np.argsort(-revenue)[:n_priority]
+    revenue = (weekly_units * price_matrix).sum(axis=1, dtype=np.float64)
+    series_id = sales["id"].astype(str).to_numpy()
+    order = np.lexsort((series_id, -revenue))
+    return order[:n_priority]
 
 
 def _prepare_subset(indices, sales, calendar, prices, arr, max_day=1969):
