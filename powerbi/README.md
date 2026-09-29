@@ -35,6 +35,6 @@ With default settings (14-day lead time, 7-day review period, ABC service levels
 
 ## Scope
 
-M5 does not contain observed inventory, open POs, supplier lead times, or Walmart replenishment decisions. Inventory quantities are explicit planning scenarios.
+M5 does not contain observed inventory, open POs, supplier lead times, or Walmart replenishment decisions. Inventory quantities are explicit planning scenarios. Safety stock uses a normal-volatility approximation, so intermittent and lumpy demand should be interpreted as sensitivity analysis rather than a calibrated service-level guarantee.
 
 GitHub Actions rebuilds the analytics from public M5 source files, compiles the PBIT, and validates embedded data, model structure, measures, visual bindings, page order, and key KPI reconciliations.
