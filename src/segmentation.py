@@ -36,9 +36,11 @@ def build_segmentation(raw_dir="data/raw", output_path="data/processed/segmentat
     recent_d = dcols[-recent_days:]
     weeks = calendar.set_index("d").loc[recent_d, "wm_yr_wk"].to_numpy()
     unique_weeks = pd.unique(weeks)
-    weekly_units = np.zeros((len(sales), len(unique_weeks)), dtype=np.float32)
+    # Use float64 for value segmentation so ABC boundaries are reproducible
+    # across runner/CPU implementations. The underlying sales are integer units.
+    weekly_units = np.zeros((len(sales), len(unique_weeks)), dtype=np.float64)
     for j, week in enumerate(unique_weeks):
-        weekly_units[:, j] = recent[:, np.where(weeks == week)[0]].sum(axis=1)
+        weekly_units[:, j] = recent[:, np.where(weeks == week)[0]].sum(axis=1, dtype=np.float64)
 
     price_recent = prices[prices.wm_yr_wk.isin(unique_weeks)]
     pivot = price_recent.pivot_table(index=["item_id", "store_id"], columns="wm_yr_wk", values="sell_price", aggfunc="last")
@@ -46,11 +48,14 @@ def build_segmentation(raw_dir="data/raw", output_path="data/processed/segmentat
     # Forward-fill only. Initial pre-launch weeks remain unavailable (0) rather than
     # being backfilled from a future observed price. This matches the project leakage policy.
     pivot = pivot.reindex(index=item_store, columns=unique_weeks).ffill(axis=1).fillna(0.0)
-    price_matrix = pivot.to_numpy(dtype=np.float32)
-    revenue = (weekly_units * price_matrix).sum(axis=1)
+    price_matrix = pivot.to_numpy(dtype=np.float64)
+    revenue = (weekly_units * price_matrix).sum(axis=1, dtype=np.float64)
 
-    order = np.argsort(-revenue)
-    cumulative = np.cumsum(revenue[order]) / revenue.sum()
+    # Deterministic tie-break by series id after descending revenue.
+    # This avoids platform-dependent ABC membership when revenues tie.
+    series_id = sales["id"].astype(str).to_numpy()
+    order = np.lexsort((series_id, -revenue))
+    cumulative = np.cumsum(revenue[order], dtype=np.float64) / revenue.sum(dtype=np.float64)
     # Default the tail to C so every series receives a valid ABC class even
     # under floating-point edge cases at the cumulative-share boundaries.
     abc = np.full(len(sales), "C", dtype=object)
