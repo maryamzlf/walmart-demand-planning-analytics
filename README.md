@@ -23,13 +23,13 @@ Report pages:
 |---|---:|
 | Item-store series | 30,490 |
 | Observed daily records | 59.2M |
-| 28-day routed forecast | 1,242,423.1 units |
+| 28-day routed forecast | 1,246,980.1 units |
 | Prior 28-day units | 1,231,764 |
-| Aggregate forecast growth | +0.87% |
-| Priority LightGBM WAPE | **45.03%** |
-| Relative WAPE improvement vs MA28 | **8.96%** |
+| Aggregate forecast growth | +1.24% |
+| Priority LightGBM WAPE | **45.38%** |
+| Relative WAPE improvement vs MA28 | **8.25%** |
 | A-class trailing revenue share | ~80.0% |
-| High-risk item-store records (risk ≥ 70) | **3,876** |
+| High-risk item-store records (risk ≥ 70) | **3,712** |
 | Power BI report pages | 5 |
 
 ## Forecast routing
@@ -91,7 +91,7 @@ Trailing 365-day ADI and CV² classify each series:
 | Smooth | 2,939 | 9.6% |
 | Erratic | 694 | 2.3% |
 
-ABC uses trailing estimated revenue; XYZ uses weekly demand variability.
+ABC uses trailing estimated revenue; XYZ uses demand variability across complete Walmart business weeks in the trailing window.
 
 ## Forecast validation
 
@@ -99,20 +99,20 @@ Simple models are evaluated on three chronological 28-day folds. The ML challeng
 
 | Model | WAPE | MAE | RMSE | Bias |
 |---|---:|---:|---:|---:|
-| **LightGBM** | **45.03%** | **2.50** | **4.26** | **-0.67%** |
+| **LightGBM** | **45.38%** | **2.52** | **4.34** | **-1.46%** |
 | MA28 | 49.46% | 2.74 | 4.86 | -1.28% |
 | WeekdayAvg8 | 49.54% | 2.75 | 4.78 | -1.06% |
 | SeasonalNaive7 | 56.77% | 3.15 | 5.43 | -6.16% |
 
-LightGBM improves WAPE by **8.96% relative to MA28** on the priority holdout.
+LightGBM improves WAPE by **8.25% relative to MA28** on the priority holdout.
 
-The ML feature set includes demand lags, rolling level/volatility, weekly sell price and price change, calendar/event/SNAP fields, and product/store hierarchy identifiers. Price histories are forward-filled only; later prices are never backfilled into earlier weeks.
+The ML feature set includes demand lags, rolling level/volatility, weekly sell price and price change, calendar/event/SNAP fields, and product/store hierarchy identifiers. Price histories are forward-filled only; later prices are never backfilled into earlier weeks. The price-change feature is set to neutral when either the current or lagged weekly price is unavailable, so a missing-price transition is not treated as a real promotion or price jump.
 
 ## Planner Action Center
 
 The final item-store table combines value class, volatility, demand pattern, forecast movement, planning-change signal, risk score, forecast route, scenario stock levels, and a planner action.
 
-A **risk score ≥ 70** defines the high-risk queue. There are **3,876** such item-store records, representing **16.63%** of trailing-365-day estimated revenue.
+A **risk score ≥ 70** defines the high-risk queue. There are **3,712** such item-store records, representing **15.69%** of trailing-365-day estimated revenue.
 
 When an MA28 route mechanically reproduces the previous 28-day total, the planning-change signal uses recent run-rate movement instead of leaving the series structurally flat.
 
@@ -128,8 +128,8 @@ Default assumptions:
 
 Baseline totals:
 - safety stock: **225,815.5 units**
-- reorder point: **847,028.3 units**
-- target stock: **1,157,623.9 units**
+- reorder point: **849,307.4 units**
+- target stock: **1,161,040.0 units**
 
 The default scenario reconciles exactly to the stored baseline. Safety stock uses a normal-volatility approximation; for intermittent and lumpy demand it is a sensitivity scenario rather than a calibrated service-level guarantee.
 
