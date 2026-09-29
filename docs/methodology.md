@@ -102,7 +102,7 @@ Default assumptions:
 
 `Target Stock = average_daily_forecast × (lead_time + review_period) + safety_stock`
 
-These are transparent decision-support scenarios, not actual order quantities.
+These are transparent decision-support scenarios, not actual order quantities. The safety-stock calculation uses a normal-volatility approximation; for intermittent and lumpy demand it is a sensitivity tool rather than a calibrated service-level guarantee.
 
 ## 9. Planner Action Center
 
