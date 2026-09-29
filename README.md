@@ -131,7 +131,7 @@ Baseline totals:
 - reorder point: **847,028.3 units**
 - target stock: **1,157,623.9 units**
 
-The default scenario reconciles exactly to the stored baseline.
+The default scenario reconciles exactly to the stored baseline. Safety stock uses a normal-volatility approximation; for intermittent and lumpy demand it is a sensitivity scenario rather than a calibrated service-level guarantee.
 
 ## Reproduce
 
@@ -149,7 +149,6 @@ Large processed tables are excluded from Git and regenerated from source. GitHub
 ```text
 .
 ├── .github/workflows/
-├── assets/
 ├── data/
 ├── docs/
 ├── outputs/
