@@ -30,7 +30,8 @@ Weekly sell price at `store_id × item_id × wm_yr_wk` grain.
 | `cv2_nonzero_demand` | Squared CV of non-zero demand sizes |
 | `demand_segment` | Smooth / Intermittent / Erratic / Lumpy |
 | `abc_class` | Revenue-priority class A/B/C |
-| `xyz_class` | Weekly-demand variability X/Y/Z |
+| `weekly_cv` | Coefficient of variation across complete Walmart business weeks in the trailing window |
+| `xyz_class` | Weekly-demand variability X/Y/Z derived from `weekly_cv` |
 | `preceding_28d_units` | Units in the 28 days before the most recent 28-day observed window |
 | `prior_28d_units` | Units in the most recent 28 observed days |
 | `forecast_28d_units` | Routed 28-day unit forecast |
