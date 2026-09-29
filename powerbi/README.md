@@ -16,19 +16,19 @@ Page-2 validation tables are intentionally disconnected from merchandise slicers
 
 ## Verified unfiltered values
 
-- Forecast 28D: **1,242,423.1**
+- Forecast 28D: **1,246,980.1**
 - Prior 28D: **1,231,764**
-- Aggregate growth: **+0.87%**
-- LightGBM WAPE: **45.03%**
-- LightGBM bias: **-0.67%**
-- WAPE improvement vs MA28: **8.96%**
-- High-risk item-store count (risk ≥ 70): **3,876**
-- Growth review: **5,028**
-- Decline review: **4,358**
-- Average risk score: **56.293**
+- Aggregate growth: **+1.24%**
+- LightGBM WAPE: **45.38%**
+- LightGBM bias: **-1.46%**
+- WAPE improvement vs MA28: **8.25%**
+- High-risk item-store count (risk ≥ 70): **3,712**
+- Growth review: **5,038**
+- Decline review: **4,371**
+- Average risk score: **56.038**
 - Baseline safety stock: **225,815.5**
-- Baseline reorder point: **847,028.3**
-- Baseline target stock: **1,157,623.9**
+- Baseline reorder point: **849,307.4**
+- Baseline target stock: **1,161,040.0**
 - Routes: **26,150 MA28 / 3,000 LightGBM / 1,340 WeekdayAvg8**
 
 With default settings (14-day lead time, 7-day review period, ABC service levels), scenario values equal the stored baseline and target-stock delta is **0**.
