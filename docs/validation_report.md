@@ -5,9 +5,9 @@
 
 ## Final status
 
-**PASS**
+**PENDING FINAL CI REBUILD**
 
-The project was rerun from public M5 source files and reviewed in three independent passes: source/reproducibility, model/planning calculations, and Power BI/presentation consistency.
+The project was reviewed across source/reproducibility, model/planning calculations, and Power BI/presentation consistency.
 
 ## Pass 1 — Data integrity, leakage, and reproducibility
 
@@ -33,7 +33,7 @@ Demand-pattern counts reproduced:
 - Smooth: **2,939**
 - Erratic: **694**
 
-Code quality passed syntax checks, **9 tests**, and a repository-content check for obvious assistant/AI attribution language.
+Code quality passed syntax checks and **9 regression/unit tests**.
 
 ## Pass 2 — Forecasting and planning calculations
 
