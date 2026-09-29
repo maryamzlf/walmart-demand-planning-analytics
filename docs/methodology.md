@@ -45,7 +45,7 @@ About 68% of bottom-level daily observations are zero.
 
 **ABC:** item-store records are ranked by trailing-365-day estimated revenue. Weekly units are multiplied by that week's sell price. Cumulative revenue defines approximately 80% A, 15% B, and 5% C.
 
-**XYZ:** weekly demand coefficient of variation defines X ≤ 0.50, Y > 0.50 and ≤ 1.00, Z > 1.00.
+**XYZ:** demand variability is calculated across complete Walmart business weeks within the trailing window so partial boundary weeks do not create artificial volatility. Weekly coefficient of variation defines X ≤ 0.50, Y > 0.50 and ≤ 1.00, Z > 1.00.
 
 ## 5. Baseline backtests
 
@@ -67,7 +67,7 @@ The highest-value 3,000 item-store series receive a global LightGBM challenger.
 
 For the reported holdout, the priority cohort is determined **before the split** using exact trailing revenue: weekly units × the sell price for that same item-store-week, summed over the trailing 365 days. Holdout sales are never used for cohort selection.
 
-Features include 1/7/14/28/56-day lags; 7/28/56-day rolling means; 28-day volatility; weekly sell price and 7-day price change; weekday/month/year; event and SNAP indicators; and hierarchy identifiers.
+Features include 1/7/14/28/56-day lags; 7/28/56-day rolling means; 28-day volatility; weekly sell price and 7-day price change; weekday/month/year; event and SNAP indicators; and hierarchy identifiers. Price change is calculated only when both the current and lagged prices are observed; unavailable-price transitions are not treated as extreme price moves.
 
 Prices are forward-filled only. Initial pre-launch prices remain unavailable (encoded as 0), rather than being filled from later weeks. Competition-provided prices for the 28-day planning horizon are treated as known covariates.
 
@@ -106,7 +106,14 @@ These are transparent decision-support scenarios, not actual order quantities. T
 
 ## 9. Planner Action Center
 
-Risk combines ABC value, XYZ variability, demand pattern, and a planning-change signal. **Risk ≥ 70** is the report's high-risk threshold.
+Risk combines four transparent components:
+
+- ABC value: A = 40, B = 25, C = 10 points
+- XYZ variability: X = 5, Y = 15, Z = 25 points
+- demand pattern: Smooth = 5, Intermittent = 10, Erratic = 15, Lumpy = 20 points
+- planning-change magnitude: up to 15 additional points
+
+The score is capped at 100. **Risk ≥ 70** is the report's high-risk threshold. It is a prioritization heuristic, not a probability of stockout or forecast failure.
 
 Forecast growth is used when informative. If a route is mechanically flat (especially MA28), recent 28-day run-rate movement is used instead. A symmetric fallback handles zero-baseline activations and drop-to-zero cases without infinite growth rates.
 
