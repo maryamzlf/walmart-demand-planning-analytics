@@ -1,11 +1,11 @@
 # QA and Reproducibility Report
 
-**Review date:** 2026-09-29  
+**Review date:** 2026-09-30  
 **Canonical report:** `powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit`
 
 ## Review scope
 
-This review checks data integrity, leakage controls, forecast and planning calculations, reproducibility, and consistency between the analytical outputs and the Power BI report.
+This review checks data integrity, leakage controls, forecast and planning calculations, reproducibility, and consistency between analytical outputs and the Power BI report.
 
 ## Data integrity
 
@@ -79,7 +79,7 @@ The final routed plan reconciles to:
 - decline-review records: **4,371**
 - average risk score: **56.038**
 
-Four weekly forecast rows are generated for every item-store series. Their sum reconciles to the 28-day forecast with a maximum difference of **0.06 units**, caused by two-decimal rounding in the weekly export.
+Four weekly forecast rows are generated for every item-store series. Weekly values are rounded to two decimals and any residual is allocated within the four-week row set so each item-store series reconciles exactly to its published 28-day forecast. In the compiled report, the maximum residual is only floating-point epsilon (about **2.3 × 10⁻¹³ units**) and the aggregate difference is **0.0**.
 
 Default inventory-scenario totals:
 
@@ -101,6 +101,7 @@ The compiled template was validated after the analytical rebuild:
 - **121,960** weekly forecast rows
 - embedded trailing revenue: **$45,163,441.24**
 - embedded 28-day forecast: **1,246,980.1 units**
+- exact weekly-to-28-day reconciliation
 - chronological weekly-forecast ordering
 - business-facing report field names
 - planner queues sorted by risk
@@ -114,17 +115,22 @@ On **Scenario Planning**, leaving the scenario parameter slicers unselected uses
 
 ### Display rounding
 
-Power BI cards use display units and presentation rounding. A displayed value can therefore be shorter than the exact value reported above; for example, an exact 45.38% metric may display with one decimal depending on the visual format. The underlying embedded values are the reconciliation source.
+Power BI cards use display units and presentation rounding. Exact values in this report and in the analytical outputs are the reconciliation source. For example, the LightGBM WAPE is **45.3753%** and is displayed as **45.38%** in the report.
 
 ## Scope limitations
 
-The public M5 data does not contain observed on-hand inventory, open purchase orders, supplier lead times, lost sales, or Walmart's actual replenishment decisions. Inventory quantities in this project are explicit planning scenarios, not observed Walmart inventory or recommended production orders.
+The public M5 data does not contain observed on-hand inventory, open purchase orders, supplier lead times, lost sales, or Walmart's actual replenishment decisions. Inventory quantities in this project are explicit planning scenarios, not observed Walmart inventory or actual reorder decisions.
 
 The official M5 competition metric is WRMSSE. This project uses WAPE, MAE, RMSE, and bias as planner-facing diagnostics and does not present them as leaderboard-equivalent scores.
 
+## Automated checks
+
+The repository contains **10 unit/regression tests** covering baseline forecast behavior, metric calculations, all four demand-pattern quadrants, planning-scenario constraints, zero-baseline handling, and planner-action threshold reconciliation.
+
 ## Build evidence
 
-- GitHub Actions analytical / Power BI build: **36620592616 — success**
-- Published PBIT blob: **cd3732048d4262fc3340018b8f94347a0bf20a7e**
-- Published PBIT size: **3,857,605 bytes**
-- Build validation: **8 tables / 5 pages / 67 visuals**
+- Latest analytical / Power BI build: **36658484131 — success**
+- Latest code-quality run for the same source change: **36658484113 — success**
+- Published PBIT blob: **172ce8fa4c4bd9abbbcc79821cd84ad2a8a26bf8**
+- Published PBIT size: **3,857,840 bytes**
+- Build validation: **8 tables / 1 relationship / 5 pages / 67 visuals**
