@@ -1,26 +1,30 @@
--- Create these three disconnected tables with Modeling > New table.
+-- Reference parameter tables matching the business-facing names in the final report.
+-- Create these as disconnected tables with Modeling > New table.
 
 ScenarioLeadTime =
-GENERATESERIES(7, 28, 1)
+SELECTCOLUMNS (
+    GENERATESERIES ( 7, 28, 1 ),
+    "Lead Time (Days)", [Value]
+)
 
 ScenarioReviewPeriod =
-DATATABLE(
-    "Days", INTEGER,
+DATATABLE (
+    "Review Period (Days)", INTEGER,
     {
-        {0}, {7}, {14}, {21}, {28}
+        { 0 }, { 7 }, { 14 }, { 21 }, { 28 }
     }
 )
 
 ScenarioServiceLevel =
-DATATABLE(
-    "Scenario", STRING,
+DATATABLE (
+    "Service Level", STRING,
     "Z", DOUBLE,
     {
-        {"ABC default", BLANK()},
-        {"85%", 1.036},
-        {"90%", 1.282},
-        {"95%", 1.645},
-        {"97%", 1.881},
-        {"99%", 2.326}
+        { "ABC default", BLANK() },
+        { "85%", 1.036 },
+        { "90%", 1.282 },
+        { "95%", 1.645 },
+        { "97%", 1.881 },
+        { "99%", 2.326 }
     }
 )
