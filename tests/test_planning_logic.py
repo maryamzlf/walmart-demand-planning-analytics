@@ -57,3 +57,22 @@ def test_ma28_reactivation_from_zero_baseline_has_finite_signal():
     out = add_planning_scenarios(_seg(), sales, forecast)
     assert (out.forecast_growth_pct == 0).all()
     assert (out.planning_change_signal_pct == 200.0).all()
+
+
+def test_action_thresholds_match_published_one_decimal_signal():
+    seg = pd.DataFrame({
+        "abc_class": ["A", "A"],
+        "xyz_class": ["X", "X"],
+        "demand_segment": ["Smooth", "Smooth"],
+    })
+    sales = np.ones((2, 90), dtype=float)
+    forecast = np.vstack([
+        np.full(28, 1.1996, dtype=float),
+        np.full(28, 0.8004, dtype=float),
+    ])
+    out = add_planning_scenarios(seg, sales, forecast)
+    assert out.planning_change_signal_pct.tolist() == [20.0, -20.0]
+    assert out.planner_action.tolist() == [
+        "Protect availability; validate supply and raise coverage",
+        "Review excess-risk exposure before replenishment",
+    ]
