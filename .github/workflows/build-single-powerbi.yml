@@ -394,7 +394,7 @@ jobs:
                   weekly_by_key[r[1]] = weekly_by_key.get(r[1], 0.0) + float(r[10])
               planner_by_key = {r[1]: float(r[20]) for r in planner_rows}
               max_weekly_recon = max(abs(weekly_by_key[k] - planner_by_key[k]) for k in planner_by_key)
-              assert max_weekly_recon <= 0.061, max_weekly_recon
+              assert max_weekly_recon < 1e-9, max_weekly_recon
 
               source_priority = pd.read_csv('outputs/priority_model_holdout.csv').set_index('model')
               embedded_priority = {
