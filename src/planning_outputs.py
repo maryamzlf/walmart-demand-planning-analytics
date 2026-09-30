@@ -99,15 +99,19 @@ def add_planning_scenarios(
     planning_change[zero_base_forecast] = forecast_signal[zero_base_forecast]
     remaining_missing = ~np.isfinite(planning_change)
     planning_change[remaining_missing] = run_rate_signal[remaining_missing]
-    out["planning_change_signal_pct"] = np.round(planning_change * 100, 1)
+    planning_change_pct = np.round(planning_change * 100, 1)
+    out["planning_change_signal_pct"] = planning_change_pct
 
     abc_score = out.abc_class.map({"A": 40, "B": 25, "C": 10}).to_numpy(float)
     xyz_score = out.xyz_class.map({"X": 5, "Y": 15, "Z": 25}).to_numpy(float)
     seg_score = out.demand_segment.map(
         {"Smooth": 5, "Intermittent": 10, "Erratic": 15, "Lumpy": 20}
     ).to_numpy(float)
+    # Score the same one-decimal planning signal that is published to the
+    # planner table so exported fields, review thresholds, and actions reconcile.
+    planning_change_for_rules = planning_change_pct / 100.0
     change_score = np.clip(
-        np.nan_to_num(np.abs(planning_change), nan=0, posinf=2, neginf=2) * 20,
+        np.nan_to_num(np.abs(planning_change_for_rules), nan=0, posinf=2, neginf=2) * 20,
         0,
         15,
     )
@@ -116,13 +120,13 @@ def add_planning_scenarios(
     )
 
     actions = []
-    signal = np.nan_to_num(planning_change, nan=0, posinf=2, neginf=-2)
-    for a, x, s, g in zip(
-        out.abc_class, out.xyz_class, out.demand_segment, signal
+    signal_pct = np.nan_to_num(planning_change_pct, nan=0, posinf=200, neginf=-200)
+    for a, x, s, g_pct in zip(
+        out.abc_class, out.xyz_class, out.demand_segment, signal_pct
     ):
-        if a == "A" and g > 0.20:
+        if a == "A" and g_pct >= 20:
             actions.append("Protect availability; validate supply and raise coverage")
-        elif a == "A" and g < -0.20:
+        elif a == "A" and g_pct <= -20:
             actions.append("Review excess-risk exposure before replenishment")
         elif a == "A" and x == "Z":
             actions.append("High-value volatile demand; use frequent planner review")
