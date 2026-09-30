@@ -4,6 +4,8 @@ The canonical report is **`Walmart_M5_Demand_Planning_Portfolio.pbit`**.
 
 Open it in Power BI Desktop. The template contains the five report pages and embedded analytical outputs, so no local CSV path is required for initial review. Use **File → Save As** in Power BI Desktop if a `.pbix` copy is needed.
 
+> **Source of truth:** use the PBIT in this folder for portfolio review and for creating any PBIX or screenshots. After an analytical rebuild, regenerate derivative PBIX files and screenshots from the current PBIT so displayed values remain aligned with the validated outputs.
+
 ## Pages
 
 1. Executive Planning Overview
@@ -44,8 +46,10 @@ Power BI cards use presentation rounding and display units. The exact reconcilia
 
 With default scenario settings, calculated scenario values reconcile to the stored baseline and target-stock delta is **0**.
 
+The four weekly forecast values for each item-store also reconcile exactly to the published 28-day forecast after export rounding.
+
 ## Scope
 
 M5 does not contain observed inventory, open purchase orders, supplier lead times, lost sales, or Walmart replenishment decisions. Inventory quantities are explicit planning scenarios. Safety stock uses a normal-volatility approximation, so intermittent and lumpy demand should be interpreted as sensitivity analysis rather than a calibrated service-level guarantee.
 
-GitHub Actions rebuilds the analytics from public M5 source files, compiles the PBIT, and validates embedded data, model structure, measures, visual bindings, page order, and key KPI reconciliations.
+GitHub Actions rebuilds the analytics from public M5 source files, compiles the PBIT, and validates embedded data, model structure, measures, visual bindings, page order, key KPI reconciliations, and weekly-to-28-day forecast consistency.
