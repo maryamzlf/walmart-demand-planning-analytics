@@ -129,8 +129,8 @@ The repository contains **10 unit/regression tests** covering baseline forecast 
 
 ## Build evidence
 
-- Latest analytical / Power BI build: **36658484131 — success**
-- Latest code-quality run for the same source change: **36658484113 — success**
-- Published PBIT blob: **172ce8fa4c4bd9abbbcc79821cd84ad2a8a26bf8**
-- Published PBIT size: **3,857,840 bytes**
+- Latest analytical / Power BI build: **36766628298 — success**
+- Latest code-quality run for the same source change: **36766628216 — success**
+- Published PBIT blob: **a8c68ea046c7ff64c19eaf30247a9e20497a5878**
+- Published PBIT size: **3,857,853 bytes**
 - Build validation: **8 tables / 1 relationship / 5 pages / 67 visuals**
