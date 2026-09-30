@@ -1,129 +1,121 @@
--- Core executive measures
+-- Reference DAX matching the canonical compiled Power BI semantic model.
+-- Business-facing column names below are the names exposed in the final report.
+
+-- PlannerActionCenter measures
 Forecast Units 28D =
-SUM(PlannerActionCenter[forecast_28d_units])
+SUM ( PlannerActionCenter[Forecast (28D)] )
 
 Prior Units 28D =
-SUM(PlannerActionCenter[prior_28d_units])
+SUM ( PlannerActionCenter[Prior (28D)] )
 
 Forecast Unit Change =
 [Forecast Units 28D] - [Prior Units 28D]
 
 Forecast Growth % =
-DIVIDE([Forecast Unit Change], [Prior Units 28D])
+DIVIDE ( [Forecast Unit Change], [Prior Units 28D] )
 
 Revenue 365D =
-SUM(PlannerActionCenter[revenue_365d])
+SUM ( PlannerActionCenter[Revenue ($, 365D)] )
 
 Units 365D =
-SUM(PlannerActionCenter[units_365d])
+SUM ( PlannerActionCenter[Units (365D)] )
 
 Item-Store Count =
-DISTINCTCOUNT(PlannerActionCenter[item_store_key])
+DISTINCTCOUNT ( PlannerActionCenter[item_store_key] )
 
 Average Risk Score =
-AVERAGE(PlannerActionCenter[demand_risk_score])
+AVERAGE ( PlannerActionCenter[Risk Score] )
 
 High-Risk Item-Store Count =
-CALCULATE(
+CALCULATE (
     [Item-Store Count],
-    KEEPFILTERS(PlannerActionCenter[demand_risk_score] >= 70)
+    KEEPFILTERS ( PlannerActionCenter[Risk Score] >= 70 )
 )
 
 High-Risk Revenue =
-CALCULATE(
+CALCULATE (
     [Revenue 365D],
-    KEEPFILTERS(PlannerActionCenter[demand_risk_score] >= 70)
+    KEEPFILTERS ( PlannerActionCenter[Risk Score] >= 70 )
 )
 
 High-Risk Revenue Share =
-DIVIDE([High-Risk Revenue], [Revenue 365D])
+DIVIDE ( [High-Risk Revenue], [Revenue 365D] )
 
 A-Class Revenue =
-CALCULATE(
+CALCULATE (
     [Revenue 365D],
-    REMOVEFILTERS(PlannerActionCenter[abc_class]),
-    PlannerActionCenter[abc_class] = "A"
+    REMOVEFILTERS ( PlannerActionCenter[ABC Class] ),
+    PlannerActionCenter[ABC Class] = "A"
 )
 
 A-Class Revenue Share =
-DIVIDE(
+DIVIDE (
     [A-Class Revenue],
-    CALCULATE([Revenue 365D], REMOVEFILTERS(PlannerActionCenter[abc_class]))
+    CALCULATE (
+        [Revenue 365D],
+        REMOVEFILTERS ( PlannerActionCenter[ABC Class] )
+    )
 )
 
 Growth Review Count =
-CALCULATE(
+CALCULATE (
     [Item-Store Count],
-    KEEPFILTERS(PlannerActionCenter[planning_change_signal_pct] >= 20)
+    KEEPFILTERS ( PlannerActionCenter[Planning Change %] >= 20 )
 )
 
 Decline Review Count =
-CALCULATE(
+CALCULATE (
     [Item-Store Count],
-    KEEPFILTERS(PlannerActionCenter[planning_change_signal_pct] <= -20)
+    KEEPFILTERS ( PlannerActionCenter[Planning Change %] <= -20 )
 )
 
--- Forecast model performance
-Priority LightGBM WAPE =
-CALCULATE(
-    MAX(PriorityModelHoldout[wape]),
-    PriorityModelHoldout[model] = "LightGBM"
-)
+Planning Change Signal % =
+DIVIDE ( AVERAGE ( PlannerActionCenter[Planning Change %] ), 100 )
 
-Priority MA28 WAPE =
-CALCULATE(
-    MAX(PriorityModelHoldout[wape]),
-    PriorityModelHoldout[model] = "MA28"
-)
+Baseline Safety Stock Units =
+SUM ( PlannerActionCenter[Baseline Safety Stock] )
 
-Priority WAPE Improvement % =
-DIVIDE(
-    [Priority MA28 WAPE] - [Priority LightGBM WAPE],
-    [Priority MA28 WAPE]
-)
+Baseline Reorder Point Units =
+SUM ( PlannerActionCenter[Baseline Reorder Point] )
 
-Priority LightGBM Bias % =
-CALCULATE(
-    MAX(PriorityModelHoldout[bias_pct]),
-    PriorityModelHoldout[model] = "LightGBM"
-)
+Baseline Target Stock Units =
+SUM ( PlannerActionCenter[Baseline Target Stock] )
 
-Weekly Forecast Units =
-SUM(ForecastWeekly[forecast_units])
-
--- Scenario controls
 Scenario Lead Time Days =
-SELECTEDVALUE(ScenarioLeadTime[Value], 14)
+SELECTEDVALUE ( ScenarioLeadTime[Lead Time (Days)], 14 )
 
 Scenario Review Period Days =
-SELECTEDVALUE(ScenarioReviewPeriod[Days], 7)
+SELECTEDVALUE ( ScenarioReviewPeriod[Review Period (Days)], 7 )
 
 Scenario Service Label =
-SELECTEDVALUE(ScenarioServiceLevel[Scenario], "ABC default")
+SELECTEDVALUE ( ScenarioServiceLevel[Service Level], "ABC default" )
 
 Scenario Z Override =
-SELECTEDVALUE(ScenarioServiceLevel[Z])
+SELECTEDVALUE ( ScenarioServiceLevel[Z] )
 
 Scenario Safety Stock Units =
 VAR LeadTime = [Scenario Lead Time Days]
 VAR ScenarioLabel = [Scenario Service Label]
 VAR OverrideZ = [Scenario Z Override]
 RETURN
-IF(
+IF (
     LeadTime = 14 && ScenarioLabel = "ABC default",
-    SUM(PlannerActionCenter[safety_stock_scenario_units]),
-    SUMX(
+    [Baseline Safety Stock Units],
+    SUMX (
         PlannerActionCenter,
         VAR ClassZ =
-            SWITCH(
-                PlannerActionCenter[abc_class],
+            SWITCH (
+                PlannerActionCenter[ABC Class],
                 "A", 1.645,
                 "B", 1.282,
                 "C", 1.036,
                 1.282
             )
-        VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
-        RETURN ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
+        VAR ZValue = IF ( ScenarioLabel = "ABC default", ClassZ, OverrideZ )
+        RETURN
+            ZValue
+                * PlannerActionCenter[Demand Sigma 90D]
+                * SQRT ( LeadTime )
     )
 )
 
@@ -132,22 +124,26 @@ VAR LeadTime = [Scenario Lead Time Days]
 VAR ScenarioLabel = [Scenario Service Label]
 VAR OverrideZ = [Scenario Z Override]
 RETURN
-IF(
+IF (
     LeadTime = 14 && ScenarioLabel = "ABC default",
-    SUM(PlannerActionCenter[reorder_point_scenario_units]),
-    SUMX(
+    [Baseline Reorder Point Units],
+    SUMX (
         PlannerActionCenter,
         VAR ClassZ =
-            SWITCH(
-                PlannerActionCenter[abc_class],
+            SWITCH (
+                PlannerActionCenter[ABC Class],
                 "A", 1.645,
                 "B", 1.282,
                 "C", 1.036,
                 1.282
             )
-        VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
-        VAR Safety = ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
-        RETURN PlannerActionCenter[avg_daily_forecast] * LeadTime + Safety
+        VAR ZValue = IF ( ScenarioLabel = "ABC default", ClassZ, OverrideZ )
+        VAR Safety =
+            ZValue
+                * PlannerActionCenter[Demand Sigma 90D]
+                * SQRT ( LeadTime )
+        RETURN
+            PlannerActionCenter[Avg Daily Forecast] * LeadTime + Safety
     )
 )
 
@@ -157,33 +153,84 @@ VAR ReviewDays = [Scenario Review Period Days]
 VAR ScenarioLabel = [Scenario Service Label]
 VAR OverrideZ = [Scenario Z Override]
 RETURN
-IF(
-    LeadTime = 14 && ReviewDays = 7 && ScenarioLabel = "ABC default",
-    SUM(PlannerActionCenter[target_stock_scenario_units]),
-    SUMX(
+IF (
+    LeadTime = 14
+        && ReviewDays = 7
+        && ScenarioLabel = "ABC default",
+    [Baseline Target Stock Units],
+    SUMX (
         PlannerActionCenter,
         VAR ClassZ =
-            SWITCH(
-                PlannerActionCenter[abc_class],
+            SWITCH (
+                PlannerActionCenter[ABC Class],
                 "A", 1.645,
                 "B", 1.282,
                 "C", 1.036,
                 1.282
             )
-        VAR ZValue = IF(ScenarioLabel = "ABC default", ClassZ, OverrideZ)
-        VAR Safety = ZValue * PlannerActionCenter[demand_sigma_90d] * SQRT(LeadTime)
-        RETURN PlannerActionCenter[avg_daily_forecast] * (LeadTime + ReviewDays) + Safety
+        VAR ZValue = IF ( ScenarioLabel = "ABC default", ClassZ, OverrideZ )
+        VAR Safety =
+            ZValue
+                * PlannerActionCenter[Demand Sigma 90D]
+                * SQRT ( LeadTime )
+        RETURN
+            PlannerActionCenter[Avg Daily Forecast]
+                * ( LeadTime + ReviewDays )
+                + Safety
     )
 )
 
 Scenario Safety Stock Delta =
-[Scenario Safety Stock Units] - SUM(PlannerActionCenter[safety_stock_scenario_units])
+[Scenario Safety Stock Units] - [Baseline Safety Stock Units]
 
 Scenario Target Stock Delta =
-[Scenario Target Stock Units] - SUM(PlannerActionCenter[target_stock_scenario_units])
+[Scenario Target Stock Units] - [Baseline Target Stock Units]
 
 Scenario Target Stock Delta % =
-DIVIDE(
-    [Scenario Target Stock Delta],
-    SUM(PlannerActionCenter[target_stock_scenario_units])
+DIVIDE ( [Scenario Target Stock Delta], [Baseline Target Stock Units] )
+
+-- PriorityModelHoldout measures
+Priority LightGBM WAPE =
+CALCULATE (
+    MAX ( PriorityModelHoldout[wape] ),
+    PriorityModelHoldout[Model] = "LightGBM"
 )
+
+Priority MA28 WAPE =
+CALCULATE (
+    MAX ( PriorityModelHoldout[wape] ),
+    PriorityModelHoldout[Model] = "MA28"
+)
+
+Priority WAPE Improvement % =
+DIVIDE (
+    [Priority MA28 WAPE] - [Priority LightGBM WAPE],
+    [Priority MA28 WAPE]
+)
+
+Priority LightGBM Bias % =
+CALCULATE (
+    MAX ( PriorityModelHoldout[bias_pct] ),
+    PriorityModelHoldout[Model] = "LightGBM"
+)
+
+Model WAPE =
+MAX ( PriorityModelHoldout[wape] )
+
+-- BaselineModelSummary measures
+Baseline WAPE =
+AVERAGE ( BaselineModelSummary[avg_wape] )
+
+Baseline RMSE =
+AVERAGE ( BaselineModelSummary[avg_rmse] )
+
+Baseline Bias % =
+AVERAGE ( BaselineModelSummary[avg_bias_pct] )
+
+-- ForecastWeekly measure
+Weekly Forecast Units =
+SUM ( ForecastWeekly[Forecast Units] )
+
+-- FeatureImportance measure
+Feature Importance Share =
+SUM ( FeatureImportance[share] )
