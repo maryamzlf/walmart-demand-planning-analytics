@@ -1,34 +1,31 @@
-# Final Three-Pass Validation Report
+# QA and Reproducibility Report
 
-**Validation date:** 2026-09-29  
+**Review date:** 2026-09-29  
 **Canonical report:** `powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit`
 
-## Current status
+## Review scope
 
-**PASS — CURRENT PBIT PUBLISHED AND VALIDATED**
+This review checks data integrity, leakage controls, forecast and planning calculations, reproducibility, and consistency between the analytical outputs and the Power BI report.
 
-The analytical pipeline, reported metrics, and Power BI build were reviewed in three separate passes. A stale repository copy of the PBIT was identified and replaced with a fresh build validated against the metrics below.
+## Data integrity
 
-## Pass 1 — Data integrity, leakage, and reproducibility
+A clean GitHub Actions rebuild verified:
 
-**Status: PASS**
-
-Verified from a clean GitHub Actions rebuild:
-
-- 30,490 item-store series
-- 3,049 items, 10 stores, 3 states, 3 categories, 7 departments
-- 1,941 observed sales days
-- 66,927,173 total units
-- 67.9978% zero-demand observations
+- **30,490** item-store series
+- **3,049** items
+- **10** stores across **3** states
+- **3** categories and **7** departments
+- **1,941** observed sales days
+- **66,927,173** total units
+- **67.9978%** zero-demand observations
 - no negative or missing sales
 - no duplicate series IDs or calendar-day keys
-- 6,841,121 price rows
+- **6,841,121** sell-price records
 - no missing or non-positive sell prices
 - unique store × item × week price keys
 - validation history exactly matches `d_1 ... d_1913` in the evaluation file
-- price histories are forward-filled only; later prices are not backfilled
-- LightGBM is configured deterministically with fixed seeds and one thread
-- code-quality workflow passes syntax checks and 9 unit/regression tests
+
+Price histories are forward-filled only. A later observed price is never backfilled into an earlier period.
 
 Demand-pattern counts reproduce exactly:
 
@@ -39,18 +36,18 @@ Demand-pattern counts reproduce exactly:
 | Smooth | 2,939 |
 | Erratic | 694 |
 
-## Pass 2 — Forecasting and planning calculations
+ABC classification uses trailing estimated revenue. XYZ variability is calculated from complete Walmart business weeks to avoid partial-week distortion.
 
-**Status: PASS**
+## Forecast validation
 
-Three rolling 28-day baseline folds select:
+The statistical baselines use three chronological 28-day folds. The best baseline route by demand pattern is:
 
 - Smooth → **WeekdayAvg8**
 - Intermittent → **MA28**
 - Erratic → **MA28**
 - Lumpy → **MA28**
 
-Priority-series holdout:
+The LightGBM challenger is evaluated on a separate leakage-safe 28-day holdout for the 3,000 highest-value item-store series selected using pre-holdout information only.
 
 | Model | WAPE | MAE | RMSE | Bias |
 |---|---:|---:|---:|---:|
@@ -59,69 +56,75 @@ Priority-series holdout:
 | WeekdayAvg8 | 49.54% | 2.75 | 4.78 | -1.06% |
 | SeasonalNaive7 | 56.77% | 3.15 | 5.43 | -6.16% |
 
-Relative WAPE improvement vs MA28: **8.25%**.
+Relative WAPE improvement of LightGBM versus MA28: **8.25%**.
 
-Final routed plan:
+Final forecast routing:
 
 - MA28: **26,150** series
 - LightGBM: **3,000** series
 - WeekdayAvg8: **1,340** series
-- Forecast 28D: **1,246,980.1 units**
-- Prior 28D: **1,231,764 units**
-- Aggregate forecast growth: **+1.235%**
-- Estimated revenue 365D: **$45,163,441.24**
+
+## Planning reconciliation
+
+The final routed plan reconciles to:
+
+- 28-day forecast: **1,246,980.1 units**
+- prior 28-day units: **1,231,764**
+- aggregate forecast growth: **+1.235%**
+- trailing-365-day estimated revenue: **$45,163,441.24**
 - A-class revenue share: **79.999%**
-- High-risk item-store records (risk ≥ 70): **3,712**
-- High-risk revenue share: **15.693%**
-- Growth review: **5,038**
-- Decline review: **4,371**
-- Average risk score: **56.038**
+- high-risk item-store records, risk ≥ 70: **3,712**
+- high-risk revenue share: **15.693%**
+- growth-review records: **5,038**
+- decline-review records: **4,371**
+- average risk score: **56.038**
+
+Four weekly forecast rows are generated for every item-store series. Their sum reconciles to the 28-day forecast with a maximum difference of **0.06 units**, caused by two-decimal rounding in the weekly export.
 
 Default inventory-scenario totals:
 
-- Safety stock: **225,815.5**
-- Reorder point: **849,307.4**
-- Target stock: **1,161,040.0**
+- safety stock: **225,815.5 units**
+- reorder point: **849,307.4 units**
+- target stock: **1,161,040.0 units**
 
-The four weekly forecast rows per item-store reconcile to the 28-day forecast with a maximum difference of **0.06 units**, attributable to two-decimal weekly export rounding.
+The default scenario uses a 14-day lead time, 7-day review period, and ABC service levels of 95% / 90% / 85%.
 
-## Pass 3 — Power BI and presentation consistency
+## Power BI consistency
 
-**Status: PASS**
-
-The current-head Power BI build completed compilation, package validation, repository publication, and artifact upload successfully:
+The compiled template was validated after the analytical rebuild:
 
 - **8 tables**
 - **1 active relationship**
-- **5 pages**
+- **5 report pages**
 - **67 visuals**
 - **30,490** Planner Action Center rows
 - **121,960** weekly forecast rows
-- business-facing visual field names
-- chronological weekly forecast ordering
-- fixed validation KPIs intentionally disconnected from merchandise slicers
-- default Scenario Planning state reconciles to the stored baseline
-- embedded planner revenue: **$45,163,441.24**
+- embedded trailing revenue: **$45,163,441.24**
 - embedded 28-day forecast: **1,246,980.1 units**
+- chronological weekly-forecast ordering
+- business-facing report field names
+- planner queues sorted by risk
+- default scenario reconciles to the stored baseline
 
-The previous PBIT in the repository contained an earlier validated run and therefore did not match the current analytical evidence. It was replaced. Older dashboard screenshots with superseded KPI values are excluded from the canonical report.
+### Interaction behavior
 
-## Presentation-language review
+On **Demand Forecast & Model Performance**, Item / Store / Demand Pattern filters apply to the routed weekly forecast. Holdout metrics, baseline backtests, and feature-importance visuals remain fixed because they are validation summaries rather than merchandise-level operating metrics.
 
-No public-facing documentation contains prompt text, assistant-style meta commentary, or generation claims. README and documentation wording was reviewed for specific analytical language rather than generic promotional language.
+On **Scenario Planning**, leaving the scenario parameter slicers unselected uses the model defaults: 14-day lead time, 7-day review period, and ABC service levels.
 
-Technical terms such as **leakage control**, **rolling holdout**, **ABC-XYZ**, **ADI/CV²**, **WAPE**, and **scenario planning** are retained because they describe the methodology.
+### Display rounding
 
-## Interpretation boundary
+Power BI cards use display units and presentation rounding. A displayed value can therefore be shorter than the exact value reported above; for example, an exact 45.38% metric may display with one decimal depending on the visual format. The underlying embedded values are the reconciliation source.
 
-M5 does not provide observed on-hand inventory, open purchase orders, supplier lead times, lost sales, or Walmart's actual replenishment decisions. Inventory quantities in this project are planning scenarios, not statements about Walmart's real inventory policy.
+## Scope limitations
+
+The public M5 data does not contain observed on-hand inventory, open purchase orders, supplier lead times, lost sales, or Walmart's actual replenishment decisions. Inventory quantities in this project are explicit planning scenarios, not observed Walmart inventory or recommended production orders.
 
 The official M5 competition metric is WRMSSE. This project uses WAPE, MAE, RMSE, and bias as planner-facing diagnostics and does not present them as leaderboard-equivalent scores.
 
+## Build evidence
 
-## Final build evidence
-
-- GitHub Actions build run: **36620592616 — success**
+- GitHub Actions analytical / Power BI build: **36620592616 — success**
 - Published PBIT blob: **cd3732048d4262fc3340018b8f94347a0bf20a7e**
 - Published PBIT size: **3,857,605 bytes**
-- Code-quality run on the reviewed source commit: **36620592519 — success**
+- Build validation: **8 tables / 5 pages / 67 visuals**
