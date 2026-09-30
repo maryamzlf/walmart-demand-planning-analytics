@@ -41,14 +41,51 @@ def generate_final_forecast(raw_dir="data/raw", processed_dir="data/processed",
     planning["forecast_end_date"] = str(calendar.loc[calendar.d == "d_1969", "date"].iloc[0])
     save_planning_outputs(planning, processed_dir / "planner_action_center.csv")
 
+    # Export weekly values at two-decimal precision while preserving exact
+    # reconciliation to the published per-series 28-day forecast. Independent
+    # rounding of four weekly blocks can otherwise create a few cents of unit
+    # drift when the weeks are summed back to the 28-day total.
+    weekly_raw = np.column_stack([
+        forecast[:, week*7:(week+1)*7].sum(axis=1) for week in range(4)
+    ])
+    weekly_cents = np.rint(weekly_raw * 100.0).astype(np.int64)
+    target_cents = np.rint(
+        planning["forecast_28d_units"].to_numpy(dtype=np.float64) * 100.0
+    ).astype(np.int64)
+    residual_cents = target_cents - weekly_cents.sum(axis=1)
+
+    for i in np.flatnonzero(residual_cents):
+        residual = int(residual_cents[i])
+        if residual > 0:
+            # Add any positive rounding residual to the largest week.
+            j = int(np.argmax(weekly_raw[i]))
+            weekly_cents[i, j] += residual
+        else:
+            # Remove a negative residual from the largest rounded weeks without
+            # allowing any exported week to become negative.
+            remaining = -residual
+            for j in np.argsort(-weekly_cents[i]):
+                take = min(remaining, int(weekly_cents[i, j]))
+                weekly_cents[i, j] -= take
+                remaining -= take
+                if remaining == 0:
+                    break
+            if remaining:
+                raise RuntimeError("Unable to reconcile weekly forecast rounding")
+
+    if (weekly_cents < 0).any():
+        raise RuntimeError("Weekly forecast export contains a negative value")
+    if not np.array_equal(weekly_cents.sum(axis=1), target_cents):
+        raise RuntimeError("Weekly forecast export does not reconcile to 28-day forecast")
+
+    weekly_values = weekly_cents.astype(np.float64) / 100.0
     weekly = []
     future_dates = calendar.set_index("d").loc[[f"d_{i}" for i in range(1942, 1970)], "date"].to_numpy()
     for week in range(4):
-        block = forecast[:, week*7:(week+1)*7].sum(axis=1)
         frame = sales[["id","item_id","dept_id","cat_id","store_id","state_id"]].copy()
         frame["forecast_week"] = week + 1
         frame["week_start_date"] = future_dates[week*7]
-        frame["forecast_units"] = np.round(block, 2)
+        frame["forecast_units"] = weekly_values[:, week]
         weekly.append(frame)
     pd.concat(weekly, ignore_index=True).to_csv(processed_dir / "forecast_weekly_item_store.csv", index=False)
 
