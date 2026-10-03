@@ -1,6 +1,6 @@
 # Power BI Report
 
-The canonical report is **[Walmart_M5_Demand_Planning_Portfolio.pbit](./Walmart_M5_Demand_Planning_Portfolio.pbit?raw=1)**.
+The canonical report is **[Walmart_M5_Demand_Planning_Portfolio.pbit](https://raw.githubusercontent.com/maryamzlf/walmart-demand-planning-analytics/main/powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)**.
 
 Open it in Power BI Desktop. The template contains the five report pages and embedded analytical outputs, so no local CSV path is required for initial review. Use **File → Save As** in Power BI Desktop if a `.pbix` copy is needed.
 
