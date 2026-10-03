@@ -6,9 +6,11 @@ The project works at the **item × store** level and connects data validation, d
 
 ## Power BI report
 
-**[Download the validated Power BI report (.pbit)](https://raw.githubusercontent.com/maryamzlf/walmart-demand-planning-analytics/main/powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)**
+**[Download the working Power BI report (.pbix)](https://raw.githubusercontent.com/maryamzlf/walmart-demand-planning-analytics/main/powerbi/Walmart_M5_Demand_Planning_Portfolio.pbix)**
 
-Open the `.pbit` in Power BI Desktop. The file contains the five-page report and embedded analytical outputs; no local CSV path is required for initial review. A `.pbix` copy can be created in Power BI Desktop with **File → Save As**.
+Open the `.pbix` directly in Power BI Desktop. It is the ready-to-open five-page portfolio report and matches the dashboard screenshots below.
+
+The PBIX is a **fixed portfolio snapshot**. The Python/CI pipeline has continued to be revalidated after that snapshot, so the **Latest reproducible pipeline results** section below is the source of truth for the newest numerical metrics.
 
 Report pages:
 1. **Executive Planning Overview** — 28-day outlook, risk, state/department views, ABC-XYZ mix, and priority queue.
@@ -17,7 +19,24 @@ Report pages:
 4. **Planner Action Center** — ranked item-store actions using value, volatility, demand movement, and risk.
 5. **Scenario Planning** — lead-time, review-period, and service-level what-if analysis for safety stock, reorder point, and target stock.
 
-## Key results
+### Dashboard screenshots
+
+#### Executive Planning Overview
+![Executive Planning Overview](assets/dashboard_01_executive.webp)
+
+#### Demand Forecast & Model Performance
+![Demand Forecast & Model Performance](assets/dashboard_02_model_performance.webp)
+
+#### Merchandise & Assortment Planning
+![Merchandise & Assortment Planning](assets/dashboard_03_merchandise.webp)
+
+#### Planner Action Center
+![Planner Action Center](assets/dashboard_04_action_center.webp)
+
+#### Scenario Planning
+![Scenario Planning](assets/dashboard_05_scenario.webp)
+
+## Latest reproducible pipeline results
 
 | Area | Result |
 |---|---:|

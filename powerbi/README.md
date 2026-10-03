@@ -1,10 +1,8 @@
 # Power BI Report
 
-The canonical report is **[Walmart_M5_Demand_Planning_Portfolio.pbit](https://raw.githubusercontent.com/maryamzlf/walmart-demand-planning-analytics/main/powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)**.
+The canonical portfolio report is **[Walmart_M5_Demand_Planning_Portfolio.pbix](https://raw.githubusercontent.com/maryamzlf/walmart-demand-planning-analytics/main/powerbi/Walmart_M5_Demand_Planning_Portfolio.pbix)**.
 
-Open it in Power BI Desktop. The template contains the five report pages and embedded analytical outputs, so no local CSV path is required for initial review. Use **File → Save As** in Power BI Desktop if a `.pbix` copy is needed.
-
-> **Source of truth:** use the PBIT in this folder for portfolio review and for creating any PBIX or screenshots. After an analytical rebuild, regenerate derivative PBIX files and screenshots from the current PBIT so displayed values remain aligned with the validated outputs.
+Open the `.pbix` directly in Power BI Desktop. It is a ready-to-open five-page report and is the file shown in the dashboard screenshots in the repository README.
 
 ## Pages
 
@@ -14,42 +12,26 @@ Open it in Power BI Desktop. The template contains the five report pages and emb
 4. Planner Action Center
 5. Scenario Planning
 
-## Interaction behavior
+## Portfolio snapshot values
 
-On **Demand Forecast & Model Performance**, the Item / Store / Demand Pattern slicers filter the routed weekly forecast. Holdout metrics, rolling baseline results, and feature importance remain fixed because they summarize model validation rather than item-store operating results.
+The included PBIX is a fixed working snapshot. Its unfiltered dashboard displays approximately:
 
-On **Scenario Planning**, the lead-time, review-period, and service-level controls are single-select. No explicit parameter selection means the default scenario is used:
-
-- lead time: **14 days**
-- review period: **7 days**
-- service levels: **A 95% / B 90% / C 85%**
-
-Power BI cards use presentation rounding and display units. The exact reconciliation values are listed below.
-
-## Verified unfiltered values
-
-- Forecast 28D: **1,246,980.1**
-- Prior 28D: **1,231,764**
-- Aggregate growth: **+1.235%**
-- LightGBM WAPE: **45.38%**
-- LightGBM bias: **-1.46%**
-- WAPE improvement vs MA28: **8.25%**
-- High-risk item-store count (risk ≥ 70): **3,712**
-- High-risk revenue share: **15.693%**
-- Growth review: **5,038**
-- Decline review: **4,371**
-- Average risk score: **56.038**
-- Baseline safety stock: **225,815.5**
-- Baseline reorder point: **849,307.4**
-- Baseline target stock: **1,161,040.0**
+- Forecast 28D: **1.24M**
+- Prior 28D: **1.23M**
+- Aggregate growth: **+0.9%**
+- LightGBM WAPE: **45.14%**
+- WAPE improvement vs MA28: **8.74%**
+- High-risk item-store count: **3,876**
 - Routes: **26,150 MA28 / 3,000 LightGBM / 1,340 WeekdayAvg8**
 
-With default scenario settings, calculated scenario values reconcile to the stored baseline and target-stock delta is **0**. The row-level stored service assumption is labeled **Baseline Service Level** to distinguish it from a selected scenario override.
+These values correspond to the included PBIX and its screenshots.
 
-The four weekly forecast values for each item-store also reconcile exactly to the published 28-day forecast after export rounding.
+## Current analytical validation
+
+The Python/CI pipeline has continued to be revalidated after the fixed PBIX snapshot. Current pipeline metrics and QA evidence are maintained in the root `README.md` and `docs/validation_report.md`.
+
+CI still compiles and validates a PBIT as a **test artifact**, but that template is no longer published as the primary portfolio download. This avoids replacing the known-working PBIX with a generated template.
 
 ## Scope
 
-M5 does not contain observed inventory, open purchase orders, supplier lead times, lost sales, or Walmart replenishment decisions. Inventory quantities are explicit planning scenarios. Safety stock uses a normal-volatility approximation, so intermittent and lumpy demand should be interpreted as sensitivity analysis rather than a calibrated service-level guarantee.
-
-GitHub Actions rebuilds the analytics from public M5 source files, compiles the PBIT, and validates embedded data, model structure, measures, visual bindings, page order, key KPI reconciliations, and weekly-to-28-day forecast consistency.
+M5 does not contain observed inventory, open purchase orders, supplier lead times, lost sales, or Walmart replenishment decisions. Inventory quantities are explicit planning scenarios rather than observed Walmart inventory.
