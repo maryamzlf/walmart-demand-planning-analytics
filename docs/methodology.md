@@ -113,7 +113,7 @@ Risk combines four transparent components:
 - ABC value: A = 40, B = 25, C = 10 points
 - XYZ variability: X = 5, Y = 15, Z = 25 points
 - demand pattern: Smooth = 5, Intermittent = 10, Erratic = 15, Lumpy = 20 points
-- planning-change magnitude: up to 15 additional points
+- planning-change magnitude: `min(15, 20 × |planning-change ratio|)` points; for example, a 20% absolute planning change contributes 4 points
 
 The score is capped at 100. **Risk ≥ 70** is the report's high-risk threshold. It is a prioritization heuristic, not a probability of stockout or forecast failure.
 
