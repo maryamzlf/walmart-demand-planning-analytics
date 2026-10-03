@@ -2,7 +2,7 @@ name: build-single-powerbi
 
 on:
   push:
-    branches: [main]
+    branches: [main, test/pbix-compile]
   workflow_dispatch:
 
 permissions:
@@ -253,6 +253,12 @@ jobs:
           TOOL="$(cat /tmp/pbi-tools-path)"
           "$TOOL" compile build/walmart_pbit_pbixproj build/Walmart_M5_Demand_Planning.pbit PBIT true
           ls -lh build/Walmart_M5_Demand_Planning.pbit
+
+      - name: Compile Power BI report file
+        run: |
+          TOOL="$(cat /tmp/pbi-tools-path)"
+          "$TOOL" compile build/walmart_pbit_pbixproj build/Walmart_M5_Demand_Planning.pbix PBIX true
+          ls -lh build/Walmart_M5_Demand_Planning.pbix
 
       - name: Normalize Power BI page order
         run: |
@@ -564,6 +570,14 @@ jobs:
           retention-days: 90
           if-no-files-found: error
 
+
+      - name: Upload PBIX compile test
+        uses: actions/upload-artifact@v4
+        with:
+          name: Walmart_M5_Demand_Planning_PBIX_Test
+          path: build/Walmart_M5_Demand_Planning.pbix
+          retention-days: 7
+          if-no-files-found: error
 
       - name: Upload analytical evidence
         uses: actions/upload-artifact@v4
