@@ -106,6 +106,7 @@ The compiled template was validated after the analytical rebuild:
 - business-facing report field names
 - planner queues sorted by risk
 - default scenario reconciles to the stored baseline
+- no table contains a column and measure with the same name
 
 ### Interaction behavior
 
@@ -129,8 +130,8 @@ The repository contains **10 unit/regression tests** covering baseline forecast 
 
 ## Build evidence
 
-- Latest analytical / Power BI build: **37141918605 — success**
-- Latest code-quality run for the same source change: **37141918556 — success**
-- Published PBIT blob: **f725ebeccc6a69e3d7c093b14f1a7647f54577ac**
-- Published PBIT size: **3,857,765 bytes**
+- Latest analytical / Power BI build: **37143266964 — success**
+- Latest code-quality run for the same source change: **37143266989 — success**
+- Published PBIT blob: **26802729a3c1625bd2cd6ca00c2fe2a8a311fae1**
+- Published PBIT size: **3,857,944 bytes**
 - Build validation: **8 tables / 1 relationship / 5 pages / 67 visuals**
