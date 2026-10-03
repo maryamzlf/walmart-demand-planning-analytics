@@ -171,9 +171,15 @@ Large processed tables are excluded from Git and regenerated from source. GitHub
 ├── data/
 ├── docs/
 ├── outputs/
+├── assets/
+│   ├── dashboard_01_executive.webp
+│   ├── dashboard_02_model_performance.webp
+│   ├── dashboard_03_merchandise.webp
+│   ├── dashboard_04_action_center.webp
+│   └── dashboard_05_scenario.webp
 ├── powerbi/
 │   ├── README.md
-│   └── Walmart_M5_Demand_Planning_Portfolio.pbit
+│   └── Walmart_M5_Demand_Planning_Portfolio.pbix
 ├── sql/
 ├── src/
 ├── tests/
@@ -188,7 +194,7 @@ Large processed tables are excluded from Git and regenerated from source. GitHub
 **Planning:** ABC-XYZ, ADI/CV², safety stock, reorder point, planner actions  
 **SQL:** planner KPI and action-queue queries  
 **Power BI:** semantic model, DAX, slicers, scenario controls, five-page report  
-**Engineering:** reproducible scripts, tests, GitHub Actions, automated PBIT build
+**Engineering:** reproducible scripts, tests, GitHub Actions, automated Power BI validation build
 
 ## Scope and limitations
 
