@@ -6,7 +6,7 @@ The project works at the **item × store** level and connects data validation, d
 
 ## Power BI report
 
-**[Download the validated Power BI report (.pbit)](powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)**
+**[Download the validated Power BI report (.pbit)](https://raw.githubusercontent.com/maryamzlf/walmart-demand-planning-analytics/main/powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)**
 
 Open the `.pbit` in Power BI Desktop. The file contains the five-page report and embedded analytical outputs; no local CSV path is required for initial review. A `.pbix` copy can be created in Power BI Desktop with **File → Save As**.
 
