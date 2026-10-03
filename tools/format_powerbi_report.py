@@ -80,9 +80,6 @@ def rename_semantic_columns():
                     target.unlink()
                 p.rename(target)
 
-    assert 'Baseline Service Level' in cols.get('PlannerActionCenter', set())
-    assert 'Service Level' not in cols.get('PlannerActionCenter', set())
-
     for dax in (ROOT / 'Model' / 'tables').glob('*/measures/*.dax'):
         text = dax.read_text(encoding='utf-8')
         for table, mapping in COLUMN_RENAMES.items():
@@ -462,6 +459,9 @@ def validate():
             for p in cdir.glob('*.json'):
                 cols[tdir.name].add(load_json(p)['name'])
             assert len(cols[tdir.name]) == len(list(cdir.glob('*.json')))
+
+    assert 'Baseline Service Level' in cols.get('PlannerActionCenter', set())
+    assert 'Service Level' not in cols.get('PlannerActionCenter', set())
 
     for dax in (ROOT / 'Model' / 'tables').glob('*/measures/*.dax'):
         text = dax.read_text(encoding='utf-8')
