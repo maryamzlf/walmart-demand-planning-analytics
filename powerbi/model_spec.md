@@ -37,6 +37,7 @@ The compiled report exposes business-facing column names while retaining technic
 - `forecast_28d_units` → **Forecast (28D)**
 - `prior_28d_units` → **Prior (28D)**
 - `planning_change_signal_pct` → **Planning Change %**
+- `service_level_scenario` → **Baseline Service Level**
 - `demand_risk_score` → **Risk Score**
 - `planner_action` → **Planner Action**
 
@@ -55,7 +56,7 @@ The final report uses the following disconnected fields:
 - `ScenarioServiceLevel[Service Level]`
 - `ScenarioServiceLevel[Z]`
 
-Their reference definitions are in `scenario_tables.dax`.
+Their reference definitions are in `scenario_tables.dax`. The three scenario parameter slicers are configured as single-select controls.
 
 ## Critical aggregation rule
 
