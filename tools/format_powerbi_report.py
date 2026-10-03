@@ -80,6 +80,9 @@ def rename_semantic_columns():
                     target.unlink()
                 p.rename(target)
 
+    assert 'Baseline Service Level' in cols.get('PlannerActionCenter', set())
+    assert 'Service Level' not in cols.get('PlannerActionCenter', set())
+
     for dax in (ROOT / 'Model' / 'tables').glob('*/measures/*.dax'):
         text = dax.read_text(encoding='utf-8')
         for table, mapping in COLUMN_RENAMES.items():
@@ -467,11 +470,31 @@ def validate():
                 assert col in cols[table], (dax, table, col)
 
     count = 0
+    scenario_parameter_slicers = 0
     for cfg_path in (ROOT / 'Report' / 'sections').glob('*/visualContainers/*/config.json'):
         cfg = load_json(cfg_path); sv = cfg.get('singleVisual', {}); count += 1
         refs = [x.get('queryRef') for xs in sv.get('projections', {}).values() for x in xs if x.get('queryRef')]
         sels = {x.get('Name') for x in sv.get('prototypeQuery', {}).get('Select', [])}
         assert not [r for r in refs if r not in sels], cfg_path
+
+        page = cfg_path.parents[2].name
+        if sv.get('visualType') == 'slicer' and 'Scenario Planning' in page:
+            scenario_refs = {
+                'ScenarioLeadTime.Lead Time (Days)',
+                'ScenarioReviewPeriod.Review Period (Days)',
+                'ScenarioServiceLevel.Service Level',
+            }
+            if scenario_refs.intersection(refs):
+                scenario_parameter_slicers += 1
+                props = (
+                    sv.get('objects', {})
+                    .get('selection', [{}])[0]
+                    .get('properties', {})
+                )
+                assert props.get('singleSelect') == lit(True), cfg_path
+                assert props.get('selectAllCheckboxEnabled') == lit(False), cfg_path
+
+    assert scenario_parameter_slicers == 3, scenario_parameter_slicers
     assert count == 67, count
     print('Power BI report validation passed:', count, 'visuals')
 
