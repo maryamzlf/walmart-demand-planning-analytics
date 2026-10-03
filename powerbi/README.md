@@ -18,7 +18,7 @@ Open it in Power BI Desktop. The template contains the five report pages and emb
 
 On **Demand Forecast & Model Performance**, the Item / Store / Demand Pattern slicers filter the routed weekly forecast. Holdout metrics, rolling baseline results, and feature importance remain fixed because they summarize model validation rather than item-store operating results.
 
-On **Scenario Planning**, no explicit parameter selection means the default scenario is used:
+On **Scenario Planning**, the lead-time, review-period, and service-level controls are single-select. No explicit parameter selection means the default scenario is used:
 
 - lead time: **14 days**
 - review period: **7 days**
@@ -44,7 +44,7 @@ Power BI cards use presentation rounding and display units. The exact reconcilia
 - Baseline target stock: **1,161,040.0**
 - Routes: **26,150 MA28 / 3,000 LightGBM / 1,340 WeekdayAvg8**
 
-With default scenario settings, calculated scenario values reconcile to the stored baseline and target-stock delta is **0**.
+With default scenario settings, calculated scenario values reconcile to the stored baseline and target-stock delta is **0**. The row-level stored service assumption is labeled **Baseline Service Level** to distinguish it from a selected scenario override.
 
 The four weekly forecast values for each item-store also reconcile exactly to the published 28-day forecast after export rounding.
 

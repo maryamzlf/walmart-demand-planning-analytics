@@ -1,7 +1,7 @@
-"""Reproducible entry point for the open-source portions of the project.
+"""Run the data audit, segmentation, and baseline backtests.
 
-The full priority-series LightGBM is intentionally a separate step because it is the most
-computationally expensive stage. Run it after audit/segmentation/backtesting.
+The priority-series LightGBM stage remains separate because it is the most
+computationally expensive part of the workflow.
 """
 from data_audit import run_audit
 from segmentation import build_segmentation

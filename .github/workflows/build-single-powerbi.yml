@@ -115,7 +115,7 @@ jobs:
           assert pd.to_numeric(planner['adi'], errors='coerce').replace([np.inf, -np.inf], np.nan).notna().sum() == 30481
 
           # Regression checks against independently verified M5 aggregates.
-          assert abs(float(planner['revenue_365d'].sum()) - 45163441.21) < 1.0, planner['revenue_365d'].sum()
+          assert abs(float(planner['revenue_365d'].sum()) - 45163441.24) < 1e-6, planner['revenue_365d'].sum()
           assert int(planner['units_365d'].sum()) == 14585821, planner['units_365d'].sum()
           assert int(planner['prior_28d_units'].sum()) == 1231764, planner['prior_28d_units'].sum()
           planner_total = float(planner['forecast_28d_units'].sum())
@@ -335,7 +335,7 @@ jobs:
 
               pac = next(t for t in tables if t['name'] == 'PlannerActionCenter')
               pac_cols = {c['name'] for c in pac.get('columns', [])}
-              assert {'State','Store','Department','Category','ABC Class','XYZ Class','ABC-XYZ','Demand Pattern','Item','Planner Action','Risk Score','Planning Change %'} <= pac_cols
+              assert {'State','Store','Department','Category','ABC Class','XYZ Class','ABC-XYZ','Demand Pattern','Item','Planner Action','Risk Score','Planning Change %','Baseline Service Level'} <= pac_cols
 
               max_m_line = 0
               planner_rows = None
@@ -384,7 +384,7 @@ jobs:
               for r in planner_rows:
                   routes[r[35]] = routes.get(r[35], 0) + 1
                   segments[r[13]] = segments.get(r[13], 0) + 1
-              assert abs(planner_revenue - 45163441.21) < 1.0, planner_revenue
+              assert abs(planner_revenue - 45163441.24) < 1e-6, planner_revenue
               assert planner_units == 14585821, planner_units
               assert planner_prior == 1231764, planner_prior
               assert routes == {'MA28': 26150, 'LightGBM': 3000, 'WeekdayAvg8': 1340}, routes

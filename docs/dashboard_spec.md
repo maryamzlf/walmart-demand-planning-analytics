@@ -40,11 +40,11 @@ The queue is sorted by **Risk Score descending** so the most consequential recor
 
 ## Page 5 — Scenario Planning
 
-**Slicers / what-if parameters:** Lead Time (Days), Review Period (Days), Service Level, ABC Class, Department.
+**Slicers / what-if parameters:** Lead Time (Days), Review Period (Days), Service Level, ABC Class, Department. Lead Time, Review Period, and Service Level are single-select controls so the scenario state is unambiguous.
 
 **KPIs:** Baseline Safety Stock, Scenario Safety Stock, Target Stock Change (Units), Scenario Reorder Point, Scenario Target Stock, Target Stock Change %.
 
-**Visuals:** Baseline vs scenario target stock by ABC class, scenario target stock by department, and scenario detail by department / ABC class.
+**Visuals:** Baseline vs scenario target stock by ABC class, scenario target stock by department, and scenario detail by department / ABC class. The detail table labels the stored ABC-based service assumption as **Baseline Service Level** so it is not confused with a selected scenario override.
 
 A visible interpretation note should accompany portfolio discussion: these are planning scenarios because public M5 data does not contain actual on-hand inventory or Walmart replenishment decisions.
 
