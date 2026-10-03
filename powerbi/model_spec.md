@@ -36,6 +36,7 @@ The compiled report exposes business-facing column names while retaining technic
 - `demand_segment` → **Demand Pattern**
 - `forecast_28d_units` → **Forecast (28D)**
 - `prior_28d_units` → **Prior (28D)**
+- `forecast_growth_pct` → **Item-Store Forecast Growth %**
 - `planning_change_signal_pct` → **Planning Change %**
 - `service_level_scenario` → **Baseline Service Level**
 - `demand_risk_score` → **Risk Score**

@@ -11,7 +11,7 @@ COLUMN_RENAMES = {
         'demand_segment': 'Demand Pattern', 'item_id': 'Item', 'planner_action': 'Planner Action',
         'forecast_model_route': 'Forecast Model', 'revenue_365d': 'Revenue ($, 365D)',
         'units_365d': 'Units (365D)', 'forecast_28d_units': 'Forecast (28D)',
-        'prior_28d_units': 'Prior (28D)', 'forecast_growth_pct': 'Forecast Growth %',
+        'prior_28d_units': 'Prior (28D)', 'forecast_growth_pct': 'Item-Store Forecast Growth %',
         'planning_change_signal_pct': 'Planning Change %', 'demand_risk_score': 'Risk Score',
         'safety_stock_scenario_units': 'Baseline Safety Stock',
         'reorder_point_scenario_units': 'Baseline Reorder Point',
@@ -462,6 +462,16 @@ def validate():
 
     assert 'Baseline Service Level' in cols.get('PlannerActionCenter', set())
     assert 'Service Level' not in cols.get('PlannerActionCenter', set())
+    assert 'Item-Store Forecast Growth %' in cols.get('PlannerActionCenter', set())
+    assert 'Forecast Growth %' not in cols.get('PlannerActionCenter', set())
+
+    # Power BI rejects a table when a column and a measure share the same name.
+    # Check source-project names before compilation so this cannot regress.
+    for tdir in (ROOT / 'Model' / 'tables').iterdir():
+        mdir = tdir / 'measures'
+        measures = {p.stem for p in mdir.glob('*.dax')} if mdir.exists() else set()
+        overlap = cols.get(tdir.name, set()) & measures
+        assert not overlap, (tdir.name, sorted(overlap))
 
     for dax in (ROOT / 'Model' / 'tables').glob('*/measures/*.dax'):
         text = dax.read_text(encoding='utf-8')

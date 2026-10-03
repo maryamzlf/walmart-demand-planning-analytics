@@ -36,7 +36,7 @@ Weekly sell price at `store_id × item_id × wm_yr_wk` grain.
 | `prior_28d_units` | Units in the most recent 28 observed days |
 | `forecast_28d_units` | Routed 28-day unit forecast |
 | `forecast_unit_change` | Forecast units minus prior-28-day units |
-| `forecast_growth_pct` | Conventional forecast vs prior-28-day percent change; blank when the prior period is zero |
+| `forecast_growth_pct` | Conventional item-store forecast vs prior-28-day percent change; blank when the prior period is zero; exposed in Power BI as **Item-Store Forecast Growth %** |
 | `recent_run_rate_change_pct` | Conventional prior-28 vs preceding-28 percent change; blank when the preceding period is zero |
 | `planning_change_signal_pct` | Planner prioritization signal: forecast growth when informative, otherwise recent run-rate movement with a finite symmetric zero-baseline fallback |
 | `avg_daily_forecast` | Routed 28-day forecast divided by 28; stored at six-decimal precision as the demand-rate input for Power BI scenario calculations |

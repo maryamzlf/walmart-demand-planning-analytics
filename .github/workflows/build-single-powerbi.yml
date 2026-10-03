@@ -333,9 +333,19 @@ jobs:
               table_names = {t['name'] for t in tables}
               assert {'PlannerActionCenter','ForecastWeekly','PriorityModelHoldout'} <= table_names
 
+              # Power BI requires column and measure names to be unique within
+              # each table. A compiled package can otherwise exist but fail
+              # when opened in Desktop.
+              for table in tables:
+                  column_names = {c['name'] for c in table.get('columns', [])}
+                  measure_names = {m['name'] for m in table.get('measures', [])}
+                  overlap = column_names & measure_names
+                  assert not overlap, (table['name'], sorted(overlap))
+
               pac = next(t for t in tables if t['name'] == 'PlannerActionCenter')
               pac_cols = {c['name'] for c in pac.get('columns', [])}
-              assert {'State','Store','Department','Category','ABC Class','XYZ Class','ABC-XYZ','Demand Pattern','Item','Planner Action','Risk Score','Planning Change %','Baseline Service Level'} <= pac_cols
+              assert {'State','Store','Department','Category','ABC Class','XYZ Class','ABC-XYZ','Demand Pattern','Item','Planner Action','Risk Score','Planning Change %','Baseline Service Level','Item-Store Forecast Growth %'} <= pac_cols
+              assert 'Forecast Growth %' not in pac_cols
 
               max_m_line = 0
               planner_rows = None
