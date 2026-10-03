@@ -16,7 +16,7 @@ COLUMN_RENAMES = {
         'safety_stock_scenario_units': 'Baseline Safety Stock',
         'reorder_point_scenario_units': 'Baseline Reorder Point',
         'target_stock_scenario_units': 'Baseline Target Stock',
-        'service_level_scenario': 'Service Level', 'avg_daily_forecast': 'Avg Daily Forecast',
+        'service_level_scenario': 'Baseline Service Level', 'avg_daily_forecast': 'Avg Daily Forecast',
         'demand_sigma_90d': 'Demand Sigma 90D',
     },
     'ForecastWeekly': {
@@ -215,6 +215,28 @@ def polish_report():
         vt = sv.get('visualType')
         page = cfg_path.parents[2].name
         ref = queryref_of_card(sv) if vt == 'card' else None
+
+        # Scenario parameters are intentionally single-select. SELECTEDVALUE
+        # falls back to the model default when multiple values are selected,
+        # which can otherwise make the displayed scenario appear inconsistent
+        # with the slicer state.
+        if vt == 'slicer' and 'Scenario Planning' in page:
+            refs = [
+                x.get('queryRef')
+                for values in sv.get('projections', {}).values()
+                for x in values
+            ]
+            scenario_parameter_refs = {
+                'ScenarioLeadTime.Lead Time (Days)',
+                'ScenarioReviewPeriod.Review Period (Days)',
+                'ScenarioServiceLevel.Service Level',
+            }
+            if scenario_parameter_refs.intersection(refs):
+                objs = sv.setdefault('objects', {})
+                objs['selection'] = [{'properties': {
+                    'singleSelect': lit(True),
+                    'selectAllCheckboxEnabled': lit(False),
+                }}]
 
         if vt == 'card':
             card_specs = {
