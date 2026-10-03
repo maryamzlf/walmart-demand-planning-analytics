@@ -169,6 +169,27 @@ def queryref_of_card(sv):
     vals = sv.get('projections', {}).get('Values', [])
     return vals[0].get('queryRef') if vals else None
 
+def style_slicer(sv):
+    vals = sv.get('projections', {}).get('Values', [])
+    ref = vals[0].get('queryRef') if vals else None
+    title = ref.split('.', 1)[1] if isinstance(ref, str) and '.' in ref else (ref or 'Filter')
+    objs = sv.setdefault('objects', {})
+    objs['header'] = [{'properties': {
+        'show': lit(True),
+        'text': lit(title),
+        'textSize': lit(9, 'D'),
+        'bold': lit(True),
+    }}]
+    objs['items'] = [{'properties': {
+        'textSize': lit(8, 'D'),
+        'padding': lit(2, 'D'),
+    }}]
+    objs['data'] = [{'properties': {
+        'mode': lit('Dropdown'),
+    }}]
+
+
+
 
 def prune_table(sv, keep_refs):
     keep = set(keep_refs)
@@ -215,6 +236,12 @@ def polish_report():
         vt = sv.get('visualType')
         page = cfg_path.parents[2].name
         ref = queryref_of_card(sv) if vt == 'card' else None
+
+        # Keep every report filter in the compact dropdown format used by the
+        # original working PBIX. Without an explicit data.mode Power BI Desktop
+        # can reopen generated slicers as checkbox lists.
+        if vt == 'slicer':
+            style_slicer(sv)
 
         # Scenario parameters are intentionally single-select. SELECTEDVALUE
         # falls back to the model default when multiple values are selected,
@@ -480,6 +507,7 @@ def validate():
                 assert col in cols[table], (dax, table, col)
 
     count = 0
+    slicer_count = 0
     scenario_parameter_slicers = 0
     for cfg_path in (ROOT / 'Report' / 'sections').glob('*/visualContainers/*/config.json'):
         cfg = load_json(cfg_path); sv = cfg.get('singleVisual', {}); count += 1
@@ -488,6 +516,19 @@ def validate():
         assert not [r for r in refs if r not in sels], cfg_path
 
         page = cfg_path.parents[2].name
+        if sv.get('visualType') == 'slicer':
+            slicer_count += 1
+            objs = sv.get('objects', {})
+            data_props = objs.get('data', [{}])[0].get('properties', {})
+            header_props = objs.get('header', [{}])[0].get('properties', {})
+            item_props = objs.get('items', [{}])[0].get('properties', {})
+            assert data_props.get('mode') == lit('Dropdown'), cfg_path
+            assert header_props.get('show') == lit(True), cfg_path
+            assert header_props.get('bold') == lit(True), cfg_path
+            assert header_props.get('textSize') == lit(9, 'D'), cfg_path
+            assert item_props.get('textSize') == lit(8, 'D'), cfg_path
+            assert item_props.get('padding') == lit(2, 'D'), cfg_path
+
         if sv.get('visualType') == 'slicer' and 'Scenario Planning' in page:
             scenario_refs = {
                 'ScenarioLeadTime.Lead Time (Days)',
@@ -504,6 +545,7 @@ def validate():
                 assert props.get('singleSelect') == lit(True), cfg_path
                 assert props.get('selectAllCheckboxEnabled') == lit(False), cfg_path
 
+    assert slicer_count == 24, slicer_count
     assert scenario_parameter_slicers == 3, scenario_parameter_slicers
     assert count == 67, count
     print('Power BI report validation passed:', count, 'visuals')
