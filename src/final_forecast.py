@@ -113,11 +113,16 @@ def generate_final_forecast(raw_dir="data/raw", processed_dir="data/processed",
         "demand_risk_score", "safety_stock_scenario_units", "reorder_point_scenario_units",
         "forecast_model_route", "planner_action",
     ]
-    (
+    sample = (
         planning.sort_values(["demand_risk_score", "revenue_365d"], ascending=[False, False])
         .head(20)[sample_cols]
-        .to_csv(portfolio_output_dir / "planner_action_sample.csv", index=False)
+        .copy()
     )
+    # Revenue is monetary and should be published at cent precision. Keeping
+    # calculation precision upstream avoids changing ABC/routing logic while
+    # preventing binary floating-point artifacts in the portfolio sample.
+    sample["revenue_365d"] = sample["revenue_365d"].round(2)
+    sample.to_csv(portfolio_output_dir / "planner_action_sample.csv", index=False)
     return planning, forecast
 
 
