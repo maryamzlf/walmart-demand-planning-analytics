@@ -1,6 +1,6 @@
 # QA and Reproducibility Report
 
-**Review date:** 2026-09-30  
+**Review date:** 2026-10-03  
 **Canonical report:** `powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit`
 
 ## Review scope
@@ -111,7 +111,7 @@ The compiled template was validated after the analytical rebuild:
 
 On **Demand Forecast & Model Performance**, Item / Store / Demand Pattern filters apply to the routed weekly forecast. Holdout metrics, baseline backtests, and feature-importance visuals remain fixed because they are validation summaries rather than merchandise-level operating metrics.
 
-On **Scenario Planning**, leaving the scenario parameter slicers unselected uses the model defaults: 14-day lead time, 7-day review period, and ABC service levels.
+On **Scenario Planning**, the lead-time, review-period, and service-level parameter slicers are single-select. Leaving them unselected uses the model defaults: 14-day lead time, 7-day review period, and ABC service levels. The stored row-level assumption is labeled **Baseline Service Level** so it cannot be mistaken for a selected scenario override.
 
 ### Display rounding
 
@@ -129,8 +129,8 @@ The repository contains **10 unit/regression tests** covering baseline forecast 
 
 ## Build evidence
 
-- Latest analytical / Power BI build: **36766628298 — success**
-- Latest code-quality run for the same source change: **36766628216 — success**
-- Published PBIT blob: **a8c68ea046c7ff64c19eaf30247a9e20497a5878**
-- Published PBIT size: **3,857,853 bytes**
+- Latest analytical / Power BI build: **37139284943 — success**
+- Latest code-quality run for the same source change: **37139284940 — success**
+- Published PBIT blob: **7030c01c14692f900b86526af0144606c1fe24dd**
+- Published PBIT size: **3,857,930 bytes**
 - Build validation: **8 tables / 1 relationship / 5 pages / 67 visuals**
