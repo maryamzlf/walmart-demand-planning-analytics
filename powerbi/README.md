@@ -1,8 +1,8 @@
 # Power BI Report
 
-The canonical portfolio report is **[Walmart_M5_Demand_Planning_Portfolio.pbix](https://raw.githubusercontent.com/maryamzlf/walmart-demand-planning-analytics/main/powerbi/Walmart_M5_Demand_Planning_Portfolio.pbix)**.
+The canonical portfolio report is **[Walmart_M5_Demand_Planning_Portfolio.pbit](https://raw.githubusercontent.com/maryamzlf/walmart-demand-planning-analytics/main/powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)**.
 
-Open the `.pbix` directly in Power BI Desktop. It is a ready-to-open five-page report and is the file shown in the dashboard screenshots in the repository README.
+Open the `.pbit` in Power BI Desktop. It contains the validated five-page report and current embedded analytical outputs. Use **File → Save As** if a `.pbix` copy is needed.
 
 ## Pages
 
@@ -12,25 +12,22 @@ Open the `.pbix` directly in Power BI Desktop. It is a ready-to-open five-page r
 4. Planner Action Center
 5. Scenario Planning
 
-## Portfolio snapshot values
+## Validated unfiltered values
 
-The included PBIX is a fixed working snapshot. Its unfiltered dashboard displays approximately:
-
-- Forecast 28D: **1.24M**
-- Prior 28D: **1.23M**
-- Aggregate growth: **+0.9%**
-- LightGBM WAPE: **45.14%**
-- WAPE improvement vs MA28: **8.74%**
-- High-risk item-store count: **3,876**
+- Forecast 28D: **1,246,980.1**
+- Prior 28D: **1,231,764**
+- Aggregate growth: **+1.235%**
+- LightGBM WAPE: **45.38%**
+- WAPE improvement vs MA28: **8.25%**
+- High-risk item-store count: **3,712**
+- Trailing-365-day estimated revenue: **$45,163,441.24**
 - Routes: **26,150 MA28 / 3,000 LightGBM / 1,340 WeekdayAvg8**
 
-These values correspond to the included PBIX and its screenshots.
+The five dashboard screenshots in the repository README correspond to this final report.
 
-## Current analytical validation
+## Validation
 
-The Python/CI pipeline has continued to be revalidated after the fixed PBIX snapshot. Current pipeline metrics and QA evidence are maintained in the root `README.md` and `docs/validation_report.md`.
-
-CI still compiles and validates a PBIT as a **test artifact**, but that template is no longer published as the primary portfolio download. This avoids replacing the known-working PBIX with a generated template.
+The Python/CI pipeline rebuilds the analytical outputs, compiles the report, and validates the embedded model and report structure before publication. See `docs/validation_report.md` for the detailed QA evidence.
 
 ## Scope
 
