@@ -6,11 +6,9 @@ The project works at the **item × store** level and connects data validation, d
 
 ## Power BI report
 
-**[Download the working Power BI report (.pbix)](https://raw.githubusercontent.com/maryamzlf/walmart-demand-planning-analytics/main/powerbi/Walmart_M5_Demand_Planning_Portfolio.pbix)**
+**[Download the final validated Power BI report (.pbit)](https://raw.githubusercontent.com/maryamzlf/walmart-demand-planning-analytics/main/powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit)**
 
-Open the `.pbix` directly in Power BI Desktop. It is the ready-to-open five-page portfolio report and matches the dashboard screenshots below.
-
-The PBIX is a **fixed portfolio snapshot**. The Python/CI pipeline has continued to be revalidated after that snapshot, so the **Latest reproducible pipeline results** section below is the source of truth for the newest numerical metrics.
+Open the `.pbit` in Power BI Desktop. It contains the validated five-page report and the current embedded analytical outputs shown in the dashboard screenshots below. Use **File → Save As** in Power BI Desktop if a `.pbix` copy is needed.
 
 Report pages:
 1. **Executive Planning Overview** — 28-day outlook, risk, state/department views, ABC-XYZ mix, and priority queue.
@@ -179,7 +177,7 @@ Large processed tables are excluded from Git and regenerated from source. GitHub
 │   └── dashboard_05_scenario.webp
 ├── powerbi/
 │   ├── README.md
-│   └── Walmart_M5_Demand_Planning_Portfolio.pbix
+│   └── Walmart_M5_Demand_Planning_Portfolio.pbit
 ├── sql/
 ├── src/
 ├── tests/
