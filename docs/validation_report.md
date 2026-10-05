@@ -1,12 +1,11 @@
 # QA and Reproducibility Report
 
-**Review date:** 2026-10-03  
-**Portfolio report:** `powerbi/Walmart_M5_Demand_Planning_Portfolio.pbix` (fixed working snapshot)  
-**Automated validation artifact:** CI-generated PBIT
+**Review date:** 2026-10-04  
+**Canonical report:** `powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit`
 
 ## Review scope
 
-This review checks data integrity, leakage controls, forecast and planning calculations, reproducibility, and consistency between the current analytical outputs and the CI-generated Power BI validation template. The downloadable PBIX is retained as a fixed working portfolio snapshot.
+This review checks data integrity, leakage controls, forecast and planning calculations, reproducibility, and consistency between the analytical outputs and the published Power BI report.
 
 ## Data integrity
 
@@ -92,7 +91,7 @@ The default scenario uses a 14-day lead time, 7-day review period, and ABC servi
 
 ## Power BI consistency
 
-The CI-generated template was validated after the analytical rebuild:
+The published Power BI report was validated after the analytical rebuild:
 
 - **8 tables**
 - **1 active relationship**
@@ -117,7 +116,7 @@ On **Scenario Planning**, the lead-time, review-period, and service-level parame
 
 ### Display rounding
 
-Power BI cards use display units and presentation rounding. Exact values in the current analytical outputs and CI validation template are the reconciliation source. For example, the current LightGBM WAPE is **45.3753%** and is displayed as **45.38%** in the generated validation template.
+Power BI cards use display units and presentation rounding. Exact values in the analytical outputs are the reconciliation source. For example, the LightGBM WAPE is **45.3753%** and is displayed as **45.38%** in the report.
 
 ## Scope limitations
 
@@ -131,7 +130,7 @@ The repository contains **10 unit/regression tests** covering baseline forecast 
 
 ## Build evidence
 
-- Latest analytical / Power BI build: **37143266964 — success**
-- Latest code-quality run for the same source change: **37143266989 — success**
+- Latest analytical / Power BI build: **37253534850 — success**
+- Latest code-quality run for the same source change: **37253534833 — success**
 - Build validation: **8 tables / 1 relationship / 5 pages / 67 visuals**
-- The generated PBIT is retained as a CI validation artifact; the repository portfolio download is the working PBIX snapshot.
+- The validated PBIT is the canonical repository portfolio report and is published only after the automated build checks pass.
