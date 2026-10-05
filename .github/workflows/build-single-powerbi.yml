@@ -541,7 +541,7 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A powerbi/Walmart_M5_Demand_Planning_Portfolio.pbit powerbi/Walmart_M5_Demand_Planning_Portfolio.pbix
+          git add -A -- powerbi/
           git add outputs/data_audit.json \
             outputs/baseline_model_summary.csv \
             outputs/priority_model_holdout.csv \
