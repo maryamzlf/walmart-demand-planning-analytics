@@ -169,6 +169,23 @@ def queryref_of_card(sv):
     vals = sv.get('projections', {}).get('Values', [])
     return vals[0].get('queryRef') if vals else None
 
+def set_axis_compact(sv, legend=False):
+    objs = sv.setdefault('objects', {})
+    objs.setdefault('categoryAxis', [{'properties': {}}])
+    objs['categoryAxis'][0].setdefault('properties', {}).update({'fontSize': lit(9, 'D')})
+    objs.setdefault('valueAxis', [{'properties': {}}])
+    objs['valueAxis'][0].setdefault('properties', {}).update({'fontSize': lit(9, 'D')})
+    if legend:
+        objs.setdefault('legend', [{'properties': {}}])
+        objs['legend'][0].setdefault('properties', {}).update({'fontSize': lit(8, 'D')})
+
+
+def set_data_labels_compact(sv):
+    objs = sv.setdefault('objects', {})
+    objs.setdefault('labels', [{'properties': {}}])
+    objs['labels'][0].setdefault('properties', {}).update({'fontSize': lit(8, 'D')})
+
+
 def style_slicer(sv):
     vals = sv.get('projections', {}).get('Values', [])
     ref = vals[0].get('queryRef') if vals else None
@@ -362,6 +379,56 @@ def polish_report():
             if pos.get('x') in newpos:
                 pos['x'], pos['width'] = newpos[pos['x']]
 
+        # Final portfolio layout polish based on the validated five-page report.
+        if 'Merchandise & Assortment Planning' in page:
+            refs_now = {x.get('queryRef') for vals in sv.get('projections', {}).values() for x in vals}
+            pos = cfg.get('layouts', [{}])[0].setdefault('position', {})
+            if vt == 'clusteredBarChart' and {'PlannerActionCenter.Department', 'PlannerActionCenter.Revenue 365D'} <= refs_now:
+                pos.update({'x': 20, 'y': 185, 'width': 400, 'height': 230})
+                set_axis_compact(sv)
+            elif vt == 'donutChart' and {'PlannerActionCenter.ABC Class', 'PlannerActionCenter.Revenue 365D'} <= refs_now:
+                pos.update({'x': 440, 'y': 185, 'width': 270, 'height': 230})
+                set_data_labels_compact(sv)
+            elif vt == 'donutChart' and {'PlannerActionCenter.XYZ Class', 'PlannerActionCenter.Item-Store Count'} <= refs_now:
+                pos.update({'x': 730, 'y': 185, 'width': 270, 'height': 230})
+                set_data_labels_compact(sv)
+            elif vt == 'clusteredBarChart' and {'PlannerActionCenter.Category', 'PlannerActionCenter.Forecast Units 28D'} <= refs_now:
+                pos.update({'x': 1020, 'y': 185, 'width': 240, 'height': 230})
+                set_axis_compact(sv)
+            elif vt == 'tableEx':
+                pos.update({'x': 20, 'y': 430, 'width': 1240, 'height': 260})
+
+        if 'Demand Forecast & Model Performance' in page:
+            refs_now = {x.get('queryRef') for vals in sv.get('projections', {}).values() for x in vals}
+            pos = cfg.get('layouts', [{}])[0].setdefault('position', {})
+            if vt == 'clusteredColumnChart' and {'BaselineModelSummary.Demand Pattern', 'BaselineModelSummary.Baseline WAPE'} <= refs_now:
+                pos.update({'x': 400, 'y': 130, 'width': 430, 'height': 250})
+                set_axis_compact(sv, legend=True)
+            elif vt == 'clusteredColumnChart' and {'PriorityModelHoldout.Model', 'PriorityModelHoldout.Model WAPE'} <= refs_now:
+                pos.update({'x': 20, 'y': 130, 'width': 360, 'height': 250})
+                set_axis_compact(sv)
+            elif vt == 'clusteredBarChart' and {'FeatureImportance.Feature', 'FeatureImportance.Feature Importance Share'} <= refs_now:
+                pos.update({'x': 850, 'y': 130, 'width': 410, 'height': 250})
+                set_axis_compact(sv)
+            elif vt == 'lineChart' and {'ForecastWeekly.Week Start', 'ForecastWeekly.Weekly Forecast Units'} <= refs_now:
+                pos.update({'x': 20, 'y': 395, 'width': 1240, 'height': 295})
+                set_axis_compact(sv)
+
+        if 'Scenario Planning' in page and vt == 'tableEx':
+            refs_now = {x.get('queryRef') for vals in sv.get('projections', {}).values() for x in vals}
+            if 'PlannerActionCenter.Scenario Target Stock Units' in refs_now:
+                prune_table(sv, [
+                    'PlannerActionCenter.Department',
+                    'PlannerActionCenter.ABC Class',
+                    'PlannerActionCenter.Baseline Service Level',
+                    'PlannerActionCenter.Scenario Safety Stock Units',
+                    'PlannerActionCenter.Scenario Reorder Point Units',
+                    'PlannerActionCenter.Scenario Target Stock Units',
+                    'PlannerActionCenter.Scenario Target Stock Delta',
+                ])
+                pos = cfg.get('layouts', [{}])[0].setdefault('position', {})
+                pos.update({'x': 20, 'y': 460, 'width': 1240, 'height': 230})
+
         dump_json(cfg_path, cfg)
 
 
@@ -545,6 +612,14 @@ def validate():
                 assert props.get('singleSelect') == lit(True), cfg_path
                 assert props.get('selectAllCheckboxEnabled') == lit(False), cfg_path
 
+    scenario_table_cols = None
+    for cfg_path in (ROOT / 'Report' / 'sections').glob('*/visualContainers/*/config.json'):
+        cfg = load_json(cfg_path); sv = cfg.get('singleVisual', {})
+        if 'Scenario Planning' in cfg_path.parents[2].name and sv.get('visualType') == 'tableEx':
+            scenario_table_cols = [
+                x.get('queryRef') for x in sv.get('projections', {}).get('Values', [])
+            ]
+    assert scenario_table_cols is not None and len(scenario_table_cols) == 7, scenario_table_cols
     assert slicer_count == 24, slicer_count
     assert scenario_parameter_slicers == 3, scenario_parameter_slicers
     assert count == 67, count
