@@ -130,7 +130,7 @@ The repository contains **10 unit/regression tests** covering baseline forecast 
 
 ## Build evidence
 
-- Latest analytical / Power BI build: **37253534850 — success**
-- Latest code-quality run for the same source change: **37253534833 — success**
+- Latest analytical / Power BI build: **37254887459 — success**
+- Latest code-quality run for the same source change: **37254887465 — success**
 - Build validation: **8 tables / 1 relationship / 5 pages / 67 visuals**
 - The validated PBIT is the canonical repository portfolio report and is published only after the automated build checks pass.
